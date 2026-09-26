@@ -32,7 +32,7 @@ const navGroups = [
 ];
 
 const pageNames: Record<string, string> = {
-  '/dashboard': 'Good morning, Maya',
+  '/dashboard': 'Good morning',
   '/progress': 'Health & progress',
   '/cycle': 'Menstrual cycle',
   '/nutrition': 'Nutrition planner',
@@ -75,10 +75,10 @@ function Shell({ children }: { children: ReactNode }) {
           <Logo dark />
           <button className="rounded-md p-2 text-[#b5cbc2] hover:bg-[#244d4d] lg:hidden" aria-label="Close navigation" data-testid="button-close-navigation" onClick={() => setMobileOpen(false)}><X size={18} /></button>
         </div>
-        <div className="mt-10 flex items-center gap-3 rounded-xl border border-[#315858] bg-[#204748] p-3">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e6bc83] text-xs font-bold text-[#173b3d]">MS</div>
+          <div className="mt-10 flex items-center gap-3 rounded-xl border border-[#315858] bg-[#204748] p-3">
+          <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e6bc83] text-xs font-bold text-[#173b3d]">NH</div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Maya Singh</p>
+            <p className="truncate text-sm font-semibold">Your health space</p>
             <p className="text-xs text-[#a8c0b7]">Personal space</p>
           </div>
           <ChevronDown size={15} className="ml-auto text-[#9bb9ae]" />
@@ -111,12 +111,12 @@ function Shell({ children }: { children: ReactNode }) {
           <div className="mx-auto flex max-w-[1420px] items-center justify-between">
             <div className="flex items-center gap-3">
               <button className="rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] p-2 lg:hidden" aria-label="Open navigation" data-testid="button-open-navigation" onClick={() => setMobileOpen(true)}><Menu size={19} /></button>
-              <div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Tuesday, 18 June 2024</p><h1 className="mt-0.5 text-lg font-semibold tracking-[-.02em]">{currentTitle}</h1></div>
+              <div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Today</p><h1 className="mt-0.5 text-lg font-semibold tracking-[-.02em]">{currentTitle}</h1></div>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               <button className="relative rounded-lg p-2 text-[#557674] hover:bg-[#e8eee8]" aria-label="View notifications" data-testid="button-notifications"><Bell size={19} /><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#d18b62]" /></button>
               <div className="hidden h-7 w-px bg-[#dfe3d9] md:block" />
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#e7bf86] text-xs font-bold text-[#173b3d]">MS</div>
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#e7bf86] text-xs font-bold text-[#173b3d]">NH</div>
             </div>
           </div>
         </header>
@@ -191,7 +191,109 @@ function StatCard({ label, value, detail, accent = 'teal', icon: Icon }: { label
 
 function Dashboard() {
   const [logged, setLogged] = useState(false);
-  return <div className="page-enter"><div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm text-[#71908b]">Here’s a gentle place to start your day.</p><h2 className="mt-1 font-display text-4xl tracking-[-.04em]">A little check-in, Maya.</h2></div><Button variant="outline" onClick={() => setLogged((v) => !v)} data-testid="button-log-check-in"><Plus size={16} /> {logged ? 'Check-in saved' : 'Log today’s check-in'}</Button></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Cycle day" value="14" detail="Ovulation window in 2 days" icon={CalendarDays} /><StatCard label="Mood" value="Steady" detail="Your average this week" accent="ochre" icon={SunMedium} /><StatCard label="Movement" value="3 / 4" detail="sessions this week" accent="lilac" icon={Dumbbell} /><StatCard label="Hydration" value="1.6 L" detail="of your 2.2 L daily goal" accent="blue" icon={Droplets} /></div><div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_.65fr]"><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7"><div className="flex items-start justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Your cycle, in context</p><h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Day 14 · Follicular phase</h3></div><Link href="/cycle" data-testid="link-dashboard-cycle" className="text-xs font-bold text-[#397269] hover:underline">View cycle <ArrowRight size={13} className="ml-1 inline" /></Link></div><div className="mt-8 flex flex-col gap-8 md:flex-row md:items-center"><div className="relative mx-auto grid h-52 w-52 shrink-0 place-items-center rounded-full" style={{ background: 'conic-gradient(#1e6364 0 46.6%, #83b7a1 46.6% 60%, #d9e7dc 60% 100%)' }}><div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbf8f0] text-center"><span className="font-display text-5xl text-[#173b3d]">14</span><span className="text-xs text-[#71908b]">of 30 days</span></div></div><div className="flex-1"><div className="space-y-4"><Phase label="Menstruation" dates="1–5 Jun" color="bg-[#d18b62]" /><Phase label="Follicular" dates="6–14 Jun" color="bg-[#1e6364]" active /><Phase label="Ovulation" dates="15–17 Jun" color="bg-[#d7ae72]" /><Phase label="Luteal" dates="18–30 Jun" color="bg-[#9ca7bb]" /></div><p className="mt-6 rounded-xl bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">Energy often feels more available here. If it feels right, this can be a supportive time for strength work and connection.</p></div></div></section><section className="rounded-2xl bg-[#dceae1] p-6 md:p-7"><div className="flex items-start justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#52736f]">Today’s care note</p><h3 className="mt-2 font-display text-2xl tracking-[-.03em] text-[#173b3d]">Make breakfast steadier.</h3></div><BookOpen size={20} className="text-[#397269]" /></div><p className="mt-5 text-sm leading-6 text-[#52736f]">Pair your morning carbohydrate with protein and a little fat to support more even energy through the afternoon.</p><div className="mt-7 rounded-xl bg-[#f7f2e8]/75 p-4"><p className="text-xs font-bold text-[#275b5a]">Try this today</p><p className="mt-1 text-xs leading-5 text-[#66807c]">Greek yoghurt · walnuts · berries</p></div><Link href="/nutrition" data-testid="link-dashboard-nutrition" className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#275b5a]">Open nutrition planner <ArrowRight size={13} /></Link></section></div><div className="mt-5 grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card"><div className="flex items-center justify-between"><h3 className="font-display text-2xl tracking-[-.03em]">Your rhythm</h3><button aria-label="More rhythm options" data-testid="button-rhythm-options" className="rounded-md p-1 text-[#71908b] hover:bg-[#edf0e8]"><MoreHorizontal size={18} /></button></div><div className="mt-7 flex items-end gap-2">{[42,62,52,74,58,88,67].map((height, i) => <div key={i} className="flex flex-1 flex-col items-center gap-2"><div className={`w-full rounded-t-md ${i === 5 ? 'bg-[#1e6364]' : 'bg-[#c7ded1]'}`} style={{ height: `${height}px` }} /><span className="text-[10px] text-[#8aa09a]">{['M','T','W','T','F','S','S'][i]}</span></div>)}</div><p className="mt-5 text-xs text-[#78908a]">A snapshot of your energy check-ins this week.</p></section><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card"><div className="flex items-center justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Next in your care plan</p><h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Small steps, at your pace.</h3></div><Link href="/fitness" data-testid="link-dashboard-care-plan" className="text-xs font-bold text-[#397269]">View plan <ArrowRight size={13} className="ml-1 inline" /></Link></div><div className="mt-6 grid gap-3 md:grid-cols-3"><PlanItem icon={Dumbbell} time="8 min" title="Stretch & reset" done /><PlanItem icon={Utensils} time="Today" title="Add a protein anchor" /><PlanItem icon={Moon} time="Tonight" title="Wind-down check-in" /></div></section></div></div>;
+  return (
+    <div className="page-enter">
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-sm text-[#71908b]">Here’s a gentle place to start your day.</p>
+          <h2 className="mt-1 font-display text-4xl tracking-[-.04em]">Your health overview</h2>
+        </div>
+        <Button variant="outline" onClick={() => setLogged((v) => !v)} data-testid="button-log-check-in">
+          <Plus size={16} /> {logged ? 'Check-in added' : 'Add a check-in'}
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Cycle information" value="Not set" detail="Add details when you’re ready" icon={CalendarDays} />
+        <StatCard label="Mood" value="Not logged" detail="Your check-ins will appear here" accent="ochre" icon={SunMedium} />
+        <StatCard label="Movement" value="Not logged" detail="Your activity will appear here" accent="lilac" icon={Dumbbell} />
+        <StatCard label="Hydration" value="Not logged" detail="Your hydration will appear here" accent="blue" icon={Droplets} />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Cycle information</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Your cycle details</h3>
+            </div>
+            <Link href="/cycle" data-testid="link-dashboard-cycle" className="text-xs font-bold text-[#397269] hover:underline">
+              Open cycle page <ArrowRight size={13} className="ml-1 inline" />
+            </Link>
+          </div>
+          <div className="mt-8 flex flex-col gap-8 md:flex-row md:items-center">
+            <div className="relative mx-auto grid h-52 w-52 shrink-0 place-items-center rounded-full" style={{ background: 'conic-gradient(#d9e7dc 0 100%)' }}>
+              <div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbf8f0] text-center">
+                <span className="font-display text-5xl text-[#173b3d]">—</span>
+                <span className="text-xs text-[#71908b]">No cycle data yet</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="space-y-4">
+                <Phase label="Menstruation" dates="Not set" color="bg-[#d18b62]" />
+                <Phase label="Follicular" dates="Not set" color="bg-[#1e6364]" />
+                <Phase label="Ovulation" dates="Not set" color="bg-[#d7ae72]" />
+                <Phase label="Luteal" dates="Not set" color="bg-[#9ca7bb]" />
+              </div>
+              <p className="mt-6 rounded-xl bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">
+                Your cycle information will appear here when you add it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-[#dceae1] p-6 md:p-7">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#52736f]">Today’s care note</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em] text-[#173b3d]">Start with one small step.</h3>
+            </div>
+            <BookOpen size={20} className="text-[#397269]" />
+          </div>
+          <p className="mt-5 text-sm leading-6 text-[#52736f]">Explore the care library whenever you’re ready. You can choose what feels useful today.</p>
+          <div className="mt-7 rounded-xl bg-[#f7f2e8]/75 p-4">
+            <p className="text-xs font-bold text-[#275b5a]">Explore a topic</p>
+            <p className="mt-1 text-xs leading-5 text-[#66807c]">Nutrition, movement, cycle care and more</p>
+          </div>
+          <Link href="/nutrition" data-testid="link-dashboard-nutrition" className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#275b5a]">
+            Open care library <ArrowRight size={13} />
+          </Link>
+        </section>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-2xl tracking-[-.03em]">Your check-ins</h3>
+            <button aria-label="More check-in options" data-testid="button-rhythm-options" className="rounded-md p-1 text-[#71908b] hover:bg-[#edf0e8]">
+              <MoreHorizontal size={18} />
+            </button>
+          </div>
+          <div className="mt-7 flex min-h-[126px] items-center justify-center rounded-xl bg-[#f0f3ec] px-6 text-center text-sm text-[#78908a]">
+            No check-ins yet. Add one whenever you’re ready.
+          </div>
+          <p className="mt-5 text-xs text-[#78908a]">Your check-in history will appear here.</p>
+        </section>
+
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Your care plan</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Small steps, at your pace.</h3>
+            </div>
+            <Link href="/fitness" data-testid="link-dashboard-care-plan" className="text-xs font-bold text-[#397269]">
+              Explore plan <ArrowRight size={13} className="ml-1 inline" />
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <PlanItem icon={Dumbbell} time="Suggested" title="Stretch & reset" />
+            <PlanItem icon={Utensils} time="Suggested" title="Nutrition ideas" />
+            <PlanItem icon={Moon} time="When ready" title="Wind-down ritual" />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 function Phase({ label, dates, color, active = false }: { label: string; dates: string; color: string; active?: boolean }) {
