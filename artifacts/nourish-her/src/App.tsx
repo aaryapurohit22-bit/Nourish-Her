@@ -321,12 +321,288 @@ function PlanItem({ icon: Icon, time, title, done = false }: { icon: IconType; t
   return <div className="flex items-center gap-3 rounded-xl border border-[#e4e8df] p-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#edf5ee] text-[#397269]">{done ? <Check size={16} /> : <Icon size={16} />}</span><div><p className="text-xs font-bold text-[#52736f]">{title}</p><p className="mt-0.5 text-[10px] text-[#8aa09a]">{time}</p></div></div>;
 }
 
+type CyclePhaseKey = 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
+
+const cyclePhaseKeys: CyclePhaseKey[] = ['menstrual', 'follicular', 'ovulation', 'luteal'];
+
+const cyclePhaseData: Record<CyclePhaseKey, {
+  label: string;
+  range: string;
+  color: string;
+  soft: string;
+  text: string;
+  guidance: {
+    nutrition: string;
+    hydration: string;
+    exercise: string;
+    selfCare: string;
+  };
+}> = {
+  menstrual: {
+    label: 'Menstrual',
+    range: 'Sample days 1–5',
+    color: 'bg-[#d18b62]',
+    soft: 'bg-[#f4e2d7]',
+    text: 'text-[#9d6042]',
+    guidance: {
+      nutrition: 'Iron-rich, warming meals',
+      hydration: 'Water and mineral-rich fluids',
+      exercise: 'Gentle walking or mobility',
+      selfCare: 'Heat, rest and quiet',
+    },
+  },
+  follicular: {
+    label: 'Follicular',
+    range: 'Sample days 6–14',
+    color: 'bg-[#1e6364]',
+    soft: 'bg-[#e1efea]',
+    text: 'text-[#1e6364]',
+    guidance: {
+      nutrition: 'Fresh, colourful meals',
+      hydration: 'Steady water through the day',
+      exercise: 'Strength and playful movement',
+      selfCare: 'Try something that feels new',
+    },
+  },
+  ovulation: {
+    label: 'Ovulation',
+    range: 'Sample days 15–17',
+    color: 'bg-[#d7ae72]',
+    soft: 'bg-[#f4e8d4]',
+    text: 'text-[#9b633f]',
+    guidance: {
+      nutrition: 'Fibre, protein and healthy fats',
+      hydration: 'Water before and after movement',
+      exercise: 'Power, intervals or group activity',
+      selfCare: 'Connection and clear boundaries',
+    },
+  },
+  luteal: {
+    label: 'Luteal',
+    range: 'Sample days 18–30',
+    color: 'bg-[#9ca7bb]',
+    soft: 'bg-[#e8e6ef]',
+    text: 'text-[#615d7c]',
+    guidance: {
+      nutrition: 'Slow-release carbohydrates',
+      hydration: 'Keep water easy to reach',
+      exercise: 'Moderate strength or restorative flow',
+      selfCare: 'Earlier nights and fewer demands',
+    },
+  },
+};
+
 function Cycle() {
-  const [tab, setTab] = useState('overview');
-  const tabs = ['overview', 'symptoms', 'insights'];
-  return <div className="page-enter"><SectionTitle eyebrow="Know your rhythm" title="Your cycle, with context." description="A clear view of where you are now, plus practical ways to support how you feel." action={<Button variant="outline" data-testid="button-cycle-log"><Plus size={16} /> Log symptoms</Button>} /><div className="mb-6 flex gap-1 border-b border-[#dfe5db]">{tabs.map((item) => <button key={item} onClick={() => setTab(item)} data-testid={`button-cycle-tab-${item}`} className={`border-b-2 px-4 py-3 text-sm font-semibold capitalize ${tab === item ? 'border-[#1e6364] text-[#1e6364]' : 'border-transparent text-[#8aa09a] hover:text-[#52736f]'}`}>{item}</button>)}</div>{tab === 'overview' ? <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]"><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8"><div className="flex items-center justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Current cycle</p><h3 className="mt-2 font-display text-3xl">Day 14 of 30</h3></div><span className="rounded-full bg-[#e1efea] px-3 py-1.5 text-xs font-bold text-[#397269]">Follicular phase</span></div><div className="my-10 grid place-items-center"><div className="relative grid h-60 w-60 place-items-center rounded-full" style={{ background: 'conic-gradient(#d18b62 0 16.6%, #1e6364 16.6% 46.6%, #d8b275 46.6% 56.6%, #ccdcd2 56.6% 100%)' }}><div className="grid h-44 w-44 place-items-center rounded-full bg-[#fbf8f0] text-center"><span className="font-display text-6xl">14</span><span className="text-xs text-[#71908b]">Tuesday, 18 June</span></div></div></div><div className="grid grid-cols-2 gap-3 md:grid-cols-4">{[['Period', '1–5 Jun'], ['Ovulation', '15 Jun'], ['Next period', '1 Jul'], ['Cycle length', '30 days']].map(([a,b]) => <div key={a} className="rounded-xl bg-[#f0f3ec] p-3"><p className="text-[10px] uppercase tracking-wider text-[#8aa09a]">{a}</p><p className="mt-1 text-sm font-bold text-[#52736f]">{b}</p></div>)}</div></section><section className="space-y-5"><div className="rounded-2xl bg-[#e4e1eb] p-6"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#686381]">In this phase</p><h3 className="mt-2 font-display text-2xl text-[#34354e]">Build and explore.</h3><p className="mt-4 text-sm leading-6 text-[#5c6077]">Oestrogen is rising, and many people notice more energy, focus and social ease. Take what resonates — your experience is the useful data.</p><Link href="/fitness" data-testid="link-cycle-movement" className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#4e526e]">See movement suggestions <ArrowRight size={13} /></Link></div><div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Recent check-ins</p><div className="mt-5 space-y-4"><CheckIn label="Energy" value="Good" /><CheckIn label="Mood" value="Steady" /><CheckIn label="Sleep" value="6h 48m" /></div></div></section></div> : <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-10 text-center"><div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-[#e1efea] text-[#397269]">{tab === 'symptoms' ? <ClipboardList size={22} /> : <LineChart size={22} />}</div><h3 className="mt-4 font-display text-2xl">{tab === 'symptoms' ? 'Your symptom notes' : 'Your cycle insights'}</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#71908b]">{tab === 'symptoms' ? 'No notes today. A quick check-in can help you notice patterns over time.' : 'Keep checking in for a little longer. Your first useful pattern is taking shape.'}</p><Button className="mt-6" data-testid={`button-cycle-${tab}-action`}><Plus size={15} /> {tab === 'symptoms' ? 'Add a check-in' : 'View monthly summary'}</Button></div>}</div>;
+  const [activePhase, setActivePhase] = useState<CyclePhaseKey>('follicular');
+  const [symptom, setSymptom] = useState('');
+  const [note, setNote] = useState('');
+  const [saved, setSaved] = useState(false);
+  const phase = cyclePhaseData[activePhase];
+
+  const scrollToLog = () => {
+    document.getElementById('symptom-log')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const saveSymptom = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!symptom) return;
+    setSaved(true);
+    setSymptom('');
+    setNote('');
+  };
+
+  return (
+    <div className="page-enter">
+      <SectionTitle
+        eyebrow="Know your rhythm"
+        title="Your cycle, with context."
+        description="Explore an example cycle and find practical ways to support each phase. Your own information can be added later."
+        action={
+          <Button variant="outline" onClick={scrollToLog} data-testid="button-cycle-log">
+            <Plus size={16} /> Log symptoms
+          </Button>
+        }
+      />
+
+      <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#cfe0d5] bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">
+        <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#397269]" />
+        <p><span className="font-bold text-[#275b5a]">Sample data.</span> This cycle view is for demonstration only and is not a prediction or personal health record.</p>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Current cycle · sample</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Day 14 of 30</h3>
+            </div>
+            <span className="rounded-full bg-[#e1efea] px-3 py-1.5 text-xs font-bold text-[#397269]">Follicular phase</span>
+          </div>
+
+          <div className="my-9 grid place-items-center">
+            <div
+              className="relative grid h-56 w-56 place-items-center rounded-full"
+              role="img"
+              aria-label="Sample cycle progress: day 14 of 30"
+              style={{ background: 'conic-gradient(#1e6364 0 46.6%, #d7ae72 46.6% 56.6%, #d9e7dc 56.6% 100%)' }}
+            >
+              <div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbf8f0] text-center">
+                <span className="font-display text-6xl">14</span>
+                <span className="text-xs text-[#71908b]">sample day of 30</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {[
+              ['Sample period', '1–5 Jun'],
+              ['Sample ovulation', '15 Jun'],
+              ['Next sample period', '1 Jul'],
+              ['Sample length', '30 days'],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-[#f0f3ec] p-3">
+                <p className="text-[10px] uppercase tracking-wider text-[#8aa09a]">{label}</p>
+                <p className="mt-1 text-sm font-bold text-[#52736f]">{value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Four phases</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Choose a phase to explore.</h3>
+            </div>
+            <CalendarDays size={20} className="text-[#397269]" />
+          </div>
+          <div className="mt-6 grid gap-2.5">
+            {cyclePhaseKeys.map((key) => {
+              const item = cyclePhaseData[key];
+              const isActive = activePhase === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActivePhase(key)}
+                  data-testid={`button-cycle-phase-${key}`}
+                  className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors ${isActive ? 'border-[#9fcdbb] bg-[#edf5ee]' : 'border-[#e4e8df] bg-[#fbf8f0] hover:border-[#b7cfc1]'}`}
+                >
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${item.soft}`}>
+                    <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-sm font-bold ${isActive ? 'text-[#275b5a]' : 'text-[#52736f]'}`}>{item.label}</span>
+                    <span className="mt-0.5 block text-[11px] text-[#8aa09a]">{item.range}</span>
+                  </span>
+                  {isActive && <Check size={16} className="shrink-0 text-[#397269]" />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-5 rounded-2xl bg-[#e4e1eb] p-6 md:p-8">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#686381]">Phase-wise guidance · sample</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em] text-[#34354e]">{phase.label} phase support</h3>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-[#5c6077]">Use these as gentle ideas, not rules. Your energy and needs can vary from cycle to cycle.</p>
+          </div>
+          <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${phase.soft} ${phase.text}`}>{phase.range}</span>
+        </div>
+        <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <GuidanceCard icon={Utensils} label="Nutrition" text={phase.guidance.nutrition} />
+          <GuidanceCard icon={Droplets} label="Hydration" text={phase.guidance.hydration} />
+          <GuidanceCard icon={Dumbbell} label="Exercise" text={phase.guidance.exercise} />
+          <GuidanceCard icon={Leaf} label="Self-care" text={phase.guidance.selfCare} />
+        </div>
+      </section>
+
+      <section id="symptom-log" className="mt-5 grid scroll-mt-24 gap-5 xl:grid-cols-[1.05fr_.95fr]">
+        <form onSubmit={saveSymptom} className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Local sample form</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Log a symptom</h3>
+              <p className="mt-2 text-sm leading-6 text-[#71908b]">This form only demonstrates the interaction. Nothing is saved beyond this page.</p>
+            </div>
+            <ClipboardList size={20} className="text-[#397269]" />
+          </div>
+          <div className="mt-6 space-y-4">
+            <label className="block text-sm font-semibold text-[#52736f]">
+              What would you like to log?
+              <select
+                value={symptom}
+                onChange={(event) => { setSymptom(event.target.value); setSaved(false); }}
+                data-testid="select-cycle-symptom"
+                className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25"
+              >
+                <option value="">Choose a sample symptom</option>
+                <option value="Cramps">Cramps</option>
+                <option value="Lower energy">Lower energy</option>
+                <option value="Headache">Headache</option>
+                <option value="Bloating">Bloating</option>
+                <option value="Tenderness">Tenderness</option>
+              </select>
+            </label>
+            <label className="block text-sm font-semibold text-[#52736f]">
+              Note <span className="font-normal text-[#8aa09a]">(optional)</span>
+              <textarea
+                value={note}
+                onChange={(event) => { setNote(event.target.value); setSaved(false); }}
+                data-testid="textarea-cycle-symptom-note"
+                placeholder="Add a short sample note"
+                rows={3}
+                className="mt-2 w-full resize-none rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25"
+              />
+            </label>
+            <div className="flex items-center justify-between gap-3">
+              {saved ? <p className="text-xs font-semibold text-[#397269]">Sample symptom added to this page.</p> : <span />}
+              <Button type="submit" disabled={!symptom} data-testid="button-cycle-save-symptom">
+                <Plus size={15} /> Add sample symptom
+              </Button>
+            </div>
+          </div>
+        </form>
+
+        <section className="rounded-2xl bg-[#1e6364] p-6 text-[#f7f2e8] md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">Sample entries</p>
+              <h3 className="mt-2 font-display text-2xl">A place to notice patterns.</h3>
+            </div>
+            <LineChart size={20} className="text-[#a9ddc8]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#c3d8ce]">Example notes show how a symptom log might look over time.</p>
+          <div className="mt-7 space-y-3">
+            {[
+              ['Follicular · sample day 10', 'Lower energy', 'A little slower after lunch.'],
+              ['Menstrual · sample day 3', 'Cramps', 'Rest and warmth felt supportive.'],
+            ].map(([when, label, detail]) => (
+              <div key={when} className="rounded-xl bg-[#2c7371] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#a9ddc8]">{when}</p>
+                <p className="mt-2 text-sm font-semibold">{label}</p>
+                <p className="mt-1 text-xs leading-5 text-[#b8d4c8]">{detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+    </div>
+  );
 }
-function CheckIn({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between border-b border-[#e7ebe2] pb-3 text-sm"><span className="text-[#71908b]">{label}</span><span className="font-semibold text-[#52736f]">{value}</span></div>; }
+
+function GuidanceCard({ icon: Icon, label, text }: { icon: IconType; label: string; text: string }) {
+  return (
+    <div className="rounded-xl bg-[#f4f1f6]/75 p-4">
+      <Icon size={18} className="text-[#615d7c]" />
+      <p className="mt-5 text-[11px] font-bold uppercase tracking-[.14em] text-[#686381]">{label}</p>
+      <p className="mt-2 text-sm font-semibold leading-5 text-[#4e526e]">{text}</p>
+    </div>
+  );
+}
 
 function Nutrition() {
   const [filter, setFilter] = useState('All');
