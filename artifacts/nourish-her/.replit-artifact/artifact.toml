@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nourish Her"
+description = "A professional women’s health and wellness frontend with guided onboarding, personalized dashboards, cycle insights, nutrition planning, and supportive care journeys."
+version = "1.0.0"
+id = "artifacts/nourish-her"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25914
+
+[services.development]
+run = "pnpm --filter @workspace/nourish-her run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nourish-her", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nourish-her/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25914"
+BASE_PATH = "/"
