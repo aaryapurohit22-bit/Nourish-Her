@@ -19,22 +19,22 @@ type IconType = typeof HomeIcon;
 const navGroups = [
   { label: 'Overview', items: [
     { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-    { href: '/progress', label: 'My progress', icon: LineChart },
+    { href: '/progress', label: 'Health & Progress', icon: LineChart },
   ]},
   { label: 'Care library', items: [
-    { href: '/cycle', label: 'Cycle', icon: CalendarDays },
+    { href: '/cycle', label: 'Menstrual Cycle', icon: CalendarDays },
     { href: '/nutrition', label: 'Nutrition', icon: Utensils },
     { href: '/pcos', label: 'PCOS / PCOD', icon: Activity },
     { href: '/menopause', label: 'Menopause', icon: SunMedium },
-    { href: '/hygiene', label: 'Menstrual hygiene', icon: Droplets },
-    { href: '/fitness', label: 'Fitness & self-care', icon: Dumbbell },
+    { href: '/hygiene', label: 'Menstrual Hygiene', icon: Droplets },
+    { href: '/fitness', label: 'Fitness & Self-Care', icon: Dumbbell },
   ]},
 ];
 
 const pageNames: Record<string, string> = {
   '/dashboard': 'Good morning, Maya',
-  '/progress': 'My progress',
-  '/cycle': 'Cycle care',
+  '/progress': 'Health & progress',
+  '/cycle': 'Menstrual cycle',
   '/nutrition': 'Nutrition planner',
   '/pcos': 'PCOS / PCOD support',
   '/menopause': 'Menopause support',
