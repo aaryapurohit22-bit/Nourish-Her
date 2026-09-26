@@ -32,7 +32,6 @@ const navGroups = [
 ];
 
 const pageNames: Record<string, string> = {
-  '/dashboard': 'Good morning',
   '/progress': 'Health & progress',
   '/cycle': 'Menstrual cycle',
   '/nutrition': 'Nutrition planner',
@@ -41,6 +40,23 @@ const pageNames: Record<string, string> = {
   '/hygiene': 'Menstrual hygiene',
   '/fitness': 'Fitness & self-care',
 };
+
+function getGreeting(date = new Date()) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  if (hour >= 17 && hour < 21) return 'Good evening';
+  return 'Good night';
+}
+
+function getLocalDateLabel(date = new Date()) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
 
 function Logo({ dark = false }: { dark?: boolean }) {
   return (
@@ -67,7 +83,9 @@ function Button({ children, className = '', variant = 'primary', ...props }: But
 function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const currentTitle = pageNames[location] || 'Nourish Her';
+  const currentTime = new Date();
+  const currentTitle = location === '/dashboard' ? getGreeting(currentTime) : pageNames[location] || 'Nourish Her';
+  const currentDate = getLocalDateLabel(currentTime);
   return (
     <div className="grain min-h-[100dvh] bg-[#f6f3ea] text-[#173b3d]">
       <aside className={`fixed inset-y-0 left-0 z-40 flex w-[258px] flex-col bg-[#173b3d] px-5 py-6 text-[#f7f2e8] transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -111,7 +129,7 @@ function Shell({ children }: { children: ReactNode }) {
           <div className="mx-auto flex max-w-[1420px] items-center justify-between">
             <div className="flex items-center gap-3">
               <button className="rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] p-2 lg:hidden" aria-label="Open navigation" data-testid="button-open-navigation" onClick={() => setMobileOpen(true)}><Menu size={19} /></button>
-              <div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Today</p><h1 className="mt-0.5 text-lg font-semibold tracking-[-.02em]">{currentTitle}</h1></div>
+              <div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">{currentDate}</p><h1 className="mt-0.5 text-lg font-semibold tracking-[-.02em]">{currentTitle}</h1></div>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               <button className="relative rounded-lg p-2 text-[#557674] hover:bg-[#e8eee8]" aria-label="View notifications" data-testid="button-notifications"><Bell size={19} /><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#d18b62]" /></button>
