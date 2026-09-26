@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
   Activity, ArrowRight, Bell, BookOpen, CalendarDays, Check,
-  ChevronDown, ChevronRight, CircleHelp, ClipboardList, Droplets,
+  ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ClipboardList, Droplets,
   Dumbbell, HeartPulse, Home as HomeIcon, Leaf, LineChart, Menu, Moon,
   MoreHorizontal, MoveRight, Play, Plus, Settings, ShieldCheck,
   Sparkles, SunMedium, Target, Utensils, X, Zap
@@ -77,7 +77,7 @@ function Button({ children, className = '', variant = 'primary', ...props }: But
     outline: 'border border-[#d7dfd7] bg-[#fbf8f0] text-[#275b5a] hover:border-[#1e6364] hover:bg-[#f2f6ef]',
     dark: 'bg-[#173b3d] text-[#fbf8f0] hover:bg-[#102f31] shadow-sm',
   };
-  return <button {...props} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold ${styles[variant]} ${className}`} />;
+  return <button {...props} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold ${styles[variant]} ${className}`}>{children}</button>;
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -340,7 +340,7 @@ const cyclePhaseData: Record<CyclePhaseKey, {
 }> = {
   menstrual: {
     label: 'Menstrual',
-    range: 'Sample days 1–5',
+    range: 'General guidance',
     color: 'bg-[#d18b62]',
     soft: 'bg-[#f4e2d7]',
     text: 'text-[#9d6042]',
@@ -353,7 +353,7 @@ const cyclePhaseData: Record<CyclePhaseKey, {
   },
   follicular: {
     label: 'Follicular',
-    range: 'Sample days 6–14',
+    range: 'General guidance',
     color: 'bg-[#1e6364]',
     soft: 'bg-[#e1efea]',
     text: 'text-[#1e6364]',
@@ -366,7 +366,7 @@ const cyclePhaseData: Record<CyclePhaseKey, {
   },
   ovulation: {
     label: 'Ovulation',
-    range: 'Sample days 15–17',
+    range: 'General guidance',
     color: 'bg-[#d7ae72]',
     soft: 'bg-[#f4e8d4]',
     text: 'text-[#9b633f]',
@@ -379,7 +379,7 @@ const cyclePhaseData: Record<CyclePhaseKey, {
   },
   luteal: {
     label: 'Luteal',
-    range: 'Sample days 18–30',
+    range: 'General guidance',
     color: 'bg-[#9ca7bb]',
     soft: 'bg-[#e8e6ef]',
     text: 'text-[#615d7c]',
@@ -392,12 +392,82 @@ const cyclePhaseData: Record<CyclePhaseKey, {
   },
 };
 
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatCycleDate(date: Date) {
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+}
+
+function formatCalendarMonth(date: Date) {
+  return new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(date);
+}
+
+function isSameDate(first: Date | null, second: Date | null) {
+  return Boolean(first && second && dateKey(first) === dateKey(second));
+}
+
+function daysInclusive(start: Date, end: Date) {
+  return Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+}
+
+function getCalendarDays(month: Date) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const leadingDays = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  return Array.from({ length: leadingDays + daysInMonth }, (_, index) => (
+    index < leadingDays
+      ? null
+      : new Date(month.getFullYear(), month.getMonth(), index - leadingDays + 1)
+  ));
+}
+
 function Cycle() {
-  const [activePhase, setActivePhase] = useState<CyclePhaseKey>('follicular');
+  const today = new Date();
+  const [activePhase, setActivePhase] = useState<CyclePhaseKey>('menstrual');
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [draftStart, setDraftStart] = useState<Date | null>(null);
+  const [draftEnd, setDraftEnd] = useState<Date | null>(null);
+  const [savedStart, setSavedStart] = useState<Date | null>(null);
+  const [savedEnd, setSavedEnd] = useState<Date | null>(null);
   const [symptom, setSymptom] = useState('');
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
   const phase = cyclePhaseData[activePhase];
+  const hasSavedDates = Boolean(savedStart && savedEnd);
+  const savedPeriodLength = savedStart && savedEnd ? daysInclusive(savedStart, savedEnd) : null;
+  const calendarDays = getCalendarDays(calendarMonth);
+  const highlightedStart = calendarOpen ? draftStart : savedStart;
+  const highlightedEnd = calendarOpen ? draftEnd : savedEnd;
+
+  const openCalendar = () => {
+    const nextStart = savedStart;
+    setDraftStart(nextStart);
+    setDraftEnd(savedEnd);
+    setCalendarMonth(nextStart ? new Date(nextStart.getFullYear(), nextStart.getMonth(), 1) : new Date(today.getFullYear(), today.getMonth(), 1));
+    setCalendarOpen(true);
+  };
+
+  const selectCalendarDate = (date: Date) => {
+    if (!draftStart || draftEnd || date.getTime() < draftStart.getTime()) {
+      setDraftStart(date);
+      setDraftEnd(null);
+      return;
+    }
+    setDraftEnd(date);
+  };
+
+  const saveDates = () => {
+    if (!draftStart || !draftEnd) return;
+    setSavedStart(draftStart);
+    setSavedEnd(draftEnd);
+    setCalendarOpen(false);
+  };
 
   const scrollToLog = () => {
     document.getElementById('symptom-log')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -416,7 +486,7 @@ function Cycle() {
       <SectionTitle
         eyebrow="Know your rhythm"
         title="Your cycle, with context."
-        description="Explore an example cycle and find practical ways to support each phase. Your own information can be added later."
+        description="Set your period dates to create a simple cycle overview, then explore practical support for each phase."
         action={
           <Button variant="outline" onClick={scrollToLog} data-testid="button-cycle-log">
             <Plus size={16} /> Log symptoms
@@ -426,39 +496,41 @@ function Cycle() {
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#cfe0d5] bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">
         <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#397269]" />
-        <p><span className="font-bold text-[#275b5a]">Sample data.</span> This cycle view is for demonstration only and is not a prediction or personal health record.</p>
+        <p><span className="font-bold text-[#275b5a]">Cycle dates stay on this page.</span> Nothing is saved until you choose both dates and select save.</p>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Current cycle · sample</p>
-              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Day 14 of 30</h3>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Current cycle</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">{hasSavedDates ? 'Period dates saved' : 'Cycle not set'}</h3>
             </div>
-            <span className="rounded-full bg-[#e1efea] px-3 py-1.5 text-xs font-bold text-[#397269]">Follicular phase</span>
+            <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${hasSavedDates ? 'bg-[#e1efea] text-[#397269]' : 'bg-[#f0f3ec] text-[#78908a]'}`}>
+              {hasSavedDates ? 'Ready to track' : 'Set your dates'}
+            </span>
           </div>
 
           <div className="my-9 grid place-items-center">
             <div
               className="relative grid h-56 w-56 place-items-center rounded-full"
               role="img"
-              aria-label="Sample cycle progress: day 14 of 30"
-              style={{ background: 'conic-gradient(#1e6364 0 46.6%, #d7ae72 46.6% 56.6%, #d9e7dc 56.6% 100%)' }}
+              aria-label={hasSavedDates ? 'Period dates saved' : 'Cycle not set'}
+              style={{ background: hasSavedDates ? 'conic-gradient(#d18b62 0 100%)' : 'conic-gradient(#d9e7dc 0 100%)' }}
             >
               <div className="grid h-40 w-40 place-items-center rounded-full bg-[#fbf8f0] text-center">
-                <span className="font-display text-6xl">14</span>
-                <span className="text-xs text-[#71908b]">sample day of 30</span>
+                <span className="font-display text-5xl">{hasSavedDates ? 'Set' : '—'}</span>
+                <span className="text-xs text-[#71908b]">{hasSavedDates ? 'period recorded' : 'set dates to begin'}</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              ['Sample period', '1–5 Jun'],
-              ['Sample ovulation', '15 Jun'],
-              ['Next sample period', '1 Jul'],
-              ['Sample length', '30 days'],
+              ['Period start', savedStart ? formatCycleDate(savedStart) : 'Not set'],
+              ['Period end', savedEnd ? formatCycleDate(savedEnd) : 'Not set'],
+              ['Period length', savedPeriodLength ? `${savedPeriodLength} days` : 'Not set'],
+              ['Cycle status', hasSavedDates ? 'Dates saved' : 'Not set'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl bg-[#f0f3ec] p-3">
                 <p className="text-[10px] uppercase tracking-wider text-[#8aa09a]">{label}</p>
@@ -466,6 +538,10 @@ function Cycle() {
               </div>
             ))}
           </div>
+
+          <Button className="mt-5 w-full" onClick={openCalendar} data-testid="button-cycle-open-calendar">
+            <CalendarDays size={16} /> {hasSavedDates ? 'Edit period dates' : 'Open calendar'}
+          </Button>
         </section>
 
         <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
@@ -503,12 +579,95 @@ function Cycle() {
         </section>
       </div>
 
+      {calendarOpen && (
+        <section className="mt-5 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Period dates</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Choose your period window.</h3>
+              <p className="mt-2 text-sm leading-6 text-[#71908b]">{!draftStart ? 'Select the first day of your period.' : !draftEnd ? 'Now select the last day of your period.' : 'Your dates are ready to save.'}</p>
+            </div>
+            <button type="button" onClick={() => setCalendarOpen(false)} className="w-fit rounded-lg px-3 py-2 text-sm font-semibold text-[#71908b] hover:bg-[#edf0e8]" data-testid="button-cycle-close-calendar">
+              Close
+            </button>
+          </div>
+
+          <div className="mt-7 grid gap-7 lg:grid-cols-[1.2fr_.8fr]">
+            <div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
+                  aria-label="Previous month"
+                  className="rounded-lg p-2 text-[#52736f] hover:bg-[#edf0e8]"
+                  data-testid="button-cycle-previous-month"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <h4 className="font-display text-xl">{formatCalendarMonth(calendarMonth)}</h4>
+                <button
+                  type="button"
+                  onClick={() => setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
+                  aria-label="Next month"
+                  className="rounded-lg p-2 text-[#52736f] hover:bg-[#edf0e8]"
+                  data-testid="button-cycle-next-month"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <div className="mt-5 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-[#8aa09a]">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <span key={day} className="py-2">{day}</span>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {calendarDays.map((day, index) => {
+                  if (!day) return <span key={`empty-${index}`} className="aspect-square" />;
+                  const isStart = isSameDate(day, highlightedStart);
+                  const isEnd = isSameDate(day, highlightedEnd);
+                  const isInRange = Boolean(highlightedStart && highlightedEnd && day >= highlightedStart && day <= highlightedEnd);
+                  return (
+                    <button
+                      key={dateKey(day)}
+                      type="button"
+                      onClick={() => selectCalendarDate(day)}
+                      aria-label={`Select ${formatCycleDate(day)}`}
+                      aria-pressed={isStart || isEnd}
+                      data-testid={`button-cycle-date-${dateKey(day)}`}
+                      className={`relative aspect-square rounded-lg text-sm font-semibold transition-colors ${isStart || isEnd ? 'bg-[#1e6364] text-[#fbf8f0]' : isInRange ? 'bg-[#e1efea] text-[#275b5a]' : 'text-[#52736f] hover:bg-[#edf5ee]'}`}
+                    >
+                      {day.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-[#edf5ee] p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Your selection</p>
+              <div className="mt-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#d7e5d9] pb-3 text-sm">
+                  <span className="text-[#71908b]">First day</span>
+                  <span className="font-semibold text-[#275b5a]">{draftStart ? formatCycleDate(draftStart) : 'Not selected'}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#d7e5d9] pb-3 text-sm">
+                  <span className="text-[#71908b]">Last day</span>
+                  <span className="font-semibold text-[#275b5a]">{draftEnd ? formatCycleDate(draftEnd) : 'Not selected'}</span>
+                </div>
+              </div>
+              <p className="mt-5 text-xs leading-5 text-[#66807c]">Select the first day, then the last day. You can edit the range anytime.</p>
+              <Button className="mt-6 w-full" onClick={saveDates} disabled={!draftStart || !draftEnd} data-testid="button-cycle-save-dates">
+                <Check size={15} /> Save selected dates
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="mt-5 rounded-2xl bg-[#e4e1eb] p-6 md:p-8">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#686381]">Phase-wise guidance · sample</p>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#686381]">Phase-wise guidance</p>
             <h3 className="mt-2 font-display text-3xl tracking-[-.03em] text-[#34354e]">{phase.label} phase support</h3>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-[#5c6077]">Use these as gentle ideas, not rules. Your energy and needs can vary from cycle to cycle.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-[#5c6077]">General education, not a prescription. Your energy and needs can vary from cycle to cycle.</p>
           </div>
           <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${phase.soft} ${phase.text}`}>{phase.range}</span>
         </div>
@@ -539,7 +698,7 @@ function Cycle() {
                 data-testid="select-cycle-symptom"
                 className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25"
               >
-                <option value="">Choose a sample symptom</option>
+                <option value="">Choose a symptom</option>
                 <option value="Cramps">Cramps</option>
                 <option value="Lower energy">Lower energy</option>
                 <option value="Headache">Headache</option>
@@ -553,15 +712,15 @@ function Cycle() {
                 value={note}
                 onChange={(event) => { setNote(event.target.value); setSaved(false); }}
                 data-testid="textarea-cycle-symptom-note"
-                placeholder="Add a short sample note"
+                placeholder="Add a short note"
                 rows={3}
                 className="mt-2 w-full resize-none rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25"
               />
             </label>
             <div className="flex items-center justify-between gap-3">
-              {saved ? <p className="text-xs font-semibold text-[#397269]">Sample symptom added to this page.</p> : <span />}
+              {saved ? <p className="text-xs font-semibold text-[#397269]">Symptom added to this page.</p> : <span />}
               <Button type="submit" disabled={!symptom} data-testid="button-cycle-save-symptom">
-                <Plus size={15} /> Add sample symptom
+                <Plus size={15} /> Add symptom
               </Button>
             </div>
           </div>
@@ -570,23 +729,14 @@ function Cycle() {
         <section className="rounded-2xl bg-[#1e6364] p-6 text-[#f7f2e8] md:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">Sample entries</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">Symptom log</p>
               <h3 className="mt-2 font-display text-2xl">A place to notice patterns.</h3>
             </div>
             <LineChart size={20} className="text-[#a9ddc8]" />
           </div>
-          <p className="mt-4 text-sm leading-6 text-[#c3d8ce]">Example notes show how a symptom log might look over time.</p>
-          <div className="mt-7 space-y-3">
-            {[
-              ['Follicular · sample day 10', 'Lower energy', 'A little slower after lunch.'],
-              ['Menstrual · sample day 3', 'Cramps', 'Rest and warmth felt supportive.'],
-            ].map(([when, label, detail]) => (
-              <div key={when} className="rounded-xl bg-[#2c7371] p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#a9ddc8]">{when}</p>
-                <p className="mt-2 text-sm font-semibold">{label}</p>
-                <p className="mt-1 text-xs leading-5 text-[#b8d4c8]">{detail}</p>
-              </div>
-            ))}
+          <p className="mt-4 text-sm leading-6 text-[#c3d8ce]">Your logged symptoms will appear here as you add them.</p>
+          <div className="mt-7 rounded-xl bg-[#2c7371] p-5 text-sm text-[#b8d4c8]">
+            No symptoms logged yet.
           </div>
         </section>
       </section>
