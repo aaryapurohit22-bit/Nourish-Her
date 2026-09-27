@@ -7,7 +7,7 @@ import {
   Activity, ArrowRight, Bell, BookOpen, CalendarDays, Check,
   ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ClipboardList, Droplets,
   Dumbbell, HeartPulse, Home as HomeIcon, Leaf, LineChart, Menu, Moon,
-  MoreHorizontal, MoveRight, Play, Plus, Settings, ShieldCheck,
+  MoreHorizontal, MoveRight, Play, Plus, Settings, ShieldCheck, Clock3,
   Scale, Sparkles, SunMedium, Target, Utensils, X, Zap
 } from 'lucide-react';
 import { Link, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
@@ -1620,6 +1620,249 @@ function MenopauseSupport() {
   );
 }
 
+type HygieneProductKey = 'pads' | 'tampons' | 'cups';
+type HygieneReminderInterval = '2 hours' | '4 hours' | '6 hours' | '8 hours' | '12 hours';
+
+const hygieneProducts: Array<{
+  key: HygieneProductKey;
+  title: string;
+  eyebrow: string;
+  icon: typeof Droplets;
+  safeUse: string;
+  changing: string;
+  cleaning: string;
+}> = [
+  {
+    key: 'pads',
+    title: 'Sanitary pads',
+    eyebrow: 'External protection',
+    icon: Droplets,
+    safeUse: 'Choose an absorbency that fits your flow and comfort. Wash your hands before and after changing.',
+    changing: 'Change regularly and sooner if the pad feels wet, full or uncomfortable. Wrap used pads before disposal.',
+    cleaning: 'Keep the surrounding skin gently clean and dry. Avoid scented products if they cause irritation.',
+  },
+  {
+    key: 'tampons',
+    title: 'Tampons',
+    eyebrow: 'Internal protection',
+    icon: Clock3,
+    safeUse: 'Use the lowest absorbency that works for you and follow the package instructions. Never use more than one at a time.',
+    changing: 'Change every 4–8 hours and never leave one in for more than 8 hours. Use a fresh one when needed.',
+    cleaning: 'Wash your hands before and after changing. Do not flush tampons; wrap and place them in a bin.',
+  },
+  {
+    key: 'cups',
+    title: 'Menstrual cups',
+    eyebrow: 'Reusable protection',
+    icon: CircleHelp,
+    safeUse: 'Follow the cup maker’s instructions for fit, insertion and wear. Stop if it feels painful or persistently uncomfortable.',
+    changing: 'Empty it according to the manufacturer’s guidance and your flow. Wash your hands before handling it.',
+    cleaning: 'Rinse and clean it as directed, sanitize between cycles when instructed, and store it clean and fully dry.',
+  },
+];
+
+const hygieneChecklistItems = [
+  { id: 'hands', title: 'Wash hands before and after changing', detail: 'A simple step that helps keep product changes clean.' },
+  { id: 'change', title: 'Change or empty your product when needed', detail: 'Use your flow, comfort and product guidance as a reference.' },
+  { id: 'clean', title: 'Keep reusable products clean and dry', detail: 'Follow the care instructions for the specific product you use.' },
+  { id: 'skin', title: 'Keep the surrounding skin comfortable', detail: 'Use gentle, unscented care and avoid internal washing.' },
+  { id: 'disposal', title: 'Dispose of used disposables thoughtfully', detail: 'Wrap pads and tampons and place them in a bin; do not flush them.' },
+  { id: 'notice', title: 'Notice changes that need attention', detail: 'Write down anything unusual that you may want to discuss with a clinician.' },
+];
+
+function HygieneSupport() {
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderProduct, setReminderProduct] = useState<HygieneProductKey | ''>('');
+  const [reminderInterval, setReminderInterval] = useState<HygieneReminderInterval>('4 hours');
+  const [reminderSaved, setReminderSaved] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<string[]>([]);
+
+  const completedCount = checkedItems.length;
+
+  const toggleChecklistItem = (id: string) => {
+    setCheckedItems((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  };
+
+  const saveReminderPlan = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!reminderProduct) return;
+    setReminderEnabled(true);
+    setReminderSaved(true);
+  };
+
+  return (
+    <div className="page-enter">
+      <section className="relative overflow-hidden rounded-3xl bg-[#dceae1] p-7 md:p-12">
+        <div className="relative z-10 max-w-2xl">
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#52736f]">Comfort, care, confidence</p>
+          <h2 className="mt-3 font-display text-5xl leading-[.98] tracking-[-.05em] text-[#173b3d] md:text-6xl">Everyday care, without the guesswork.</h2>
+          <p className="mt-6 max-w-xl text-sm leading-7 text-[#5f7975]">Clear, shame-free guidance for period products, daily routines and knowing when a change deserves medical advice. Choose only what is useful for you.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href="#hygiene-checklist" data-testid="link-hygiene-checklist" className="inline-flex items-center gap-2 rounded-lg bg-[#1e6364] px-4 py-2.5 text-sm font-semibold text-[#fbf8f0] shadow-sm hover:bg-[#174e50]"><ClipboardList size={16} /> Start your checklist</a>
+            <a href="#hygiene-products" data-testid="link-hygiene-products" className="inline-flex items-center gap-2 rounded-lg border border-[#b8d2c1] bg-[#f7f2e8] px-4 py-2.5 text-sm font-semibold text-[#356562] hover:border-[#1e6364]">Explore products <ArrowRight size={15} /></a>
+          </div>
+        </div>
+        <div className="absolute -bottom-16 -right-12 grid h-64 w-64 place-items-center rounded-full border border-[#ffffff]/60">
+          <div className="grid h-44 w-44 place-items-center rounded-full border border-[#ffffff]/70"><Droplets size={44} className="text-[#397269]" /></div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Care checklist</p><ClipboardList size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-4xl tracking-[-.04em]">{completedCount}/{hygieneChecklistItems.length}</p>
+          <p className="mt-1 text-xs text-[#78908a]">{completedCount === 0 ? 'Nothing checked yet' : completedCount === hygieneChecklistItems.length ? 'Complete for now' : 'Steps checked on this page'}</p>
+        </div>
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Reminder plan</p><Clock3 size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-3xl tracking-[-.04em]">{reminderEnabled ? 'On' : 'Off'}</p>
+          <p className="mt-1 text-xs text-[#78908a]">{reminderEnabled ? `${reminderProduct} · every ${reminderInterval}` : 'Optional and not configured'}</p>
+        </div>
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Your preferences</p><Leaf size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-3xl tracking-[-.04em]">Not set</p>
+          <p className="mt-1 text-xs text-[#78908a]">Choose what fits your day</p>
+        </div>
+      </section>
+
+      <section id="hygiene-products" className="mt-6 scroll-mt-24">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#71908b]">Product education</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Use what works for you.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71908b]">Pads, tampons and cups can all be used safely when you follow their instructions, keep your hands and products clean, and change them on time.</p>
+          </div>
+          <span className="w-fit rounded-full bg-[#e8f0ea] px-3 py-1.5 text-xs font-bold text-[#397269]">No product preference assumed</span>
+        </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          {hygieneProducts.map(({ title, eyebrow, icon: Icon, safeUse, changing, cleaning }) => (
+            <article key={title} className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card">
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#71908b]">{eyebrow}</p><h4 className="mt-2 font-display text-2xl tracking-[-.03em]">{title}</h4></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e1efea] text-[#397269]"><Icon size={19} /></span></div>
+              <div className="mt-6 space-y-4 text-xs leading-5 text-[#66807c]">
+                <p><span className="font-bold text-[#356562]">Safe use:</span> {safeUse}</p>
+                <p><span className="font-bold text-[#356562]">Changing:</span> {changing}</p>
+                <p><span className="font-bold text-[#356562]">Cleaning & care:</span> {cleaning}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
+        <form onSubmit={saveReminderPlan} className="rounded-2xl bg-[#173b3d] p-6 text-[#f7f2e8] md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9bd6c2]">Optional reminders</p>
+              <h3 className="mt-2 font-display text-3xl">Set a changing rhythm.</h3>
+            </div>
+            <Clock3 size={21} className="text-[#a9ddc8]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#c3d8ce]">Choose a product and interval that you want to remember. This local plan does not send device notifications or use your period dates.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-semibold text-[#e2efe8]">
+              Product
+              <select value={reminderProduct} onChange={(event) => { setReminderProduct(event.target.value as HygieneProductKey | ''); setReminderSaved(false); }} data-testid="select-hygiene-reminder-product" className="mt-2 w-full rounded-lg border border-[#416c68] bg-[#204748] px-3.5 py-3 text-sm font-normal text-[#f7f2e8] outline-none focus:border-[#9bd6c2] focus:ring-4 focus:ring-[#9bd6c2]/20">
+                <option value="">Choose a product</option>
+                <option value="pads">Pads</option>
+                <option value="tampons">Tampons</option>
+                <option value="cups">Menstrual cups</option>
+              </select>
+            </label>
+            <label className="block text-sm font-semibold text-[#e2efe8]">
+              Remind me every
+              <select value={reminderInterval} onChange={(event) => { setReminderInterval(event.target.value as HygieneReminderInterval); setReminderSaved(false); }} data-testid="select-hygiene-reminder-interval" className="mt-2 w-full rounded-lg border border-[#416c68] bg-[#204748] px-3.5 py-3 text-sm font-normal text-[#f7f2e8] outline-none focus:border-[#9bd6c2] focus:ring-4 focus:ring-[#9bd6c2]/20">
+                <option value="2 hours">2 hours</option>
+                <option value="4 hours">4 hours</option>
+                <option value="6 hours">6 hours</option>
+                <option value="8 hours">8 hours</option>
+                <option value="12 hours">12 hours</option>
+              </select>
+            </label>
+          </div>
+          <div className="mt-6 flex flex-col justify-between gap-3 border-t border-[#315858] pt-5 sm:flex-row sm:items-center">
+            {reminderSaved ? <p className="text-xs font-semibold text-[#a9ddc8]">Reminder plan saved on this page.</p> : <p className="text-xs text-[#a8c0b7]">{reminderProduct ? 'Ready to save your reminder plan.' : 'Choose a product to configure a plan.'}</p>}
+            <Button type="submit" disabled={!reminderProduct} variant="quiet" data-testid="button-hygiene-save-reminder"><Check size={15} /> Save reminder plan</Button>
+          </div>
+        </form>
+
+        <section className="rounded-2xl bg-[#e4e1eb] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#686381]">Daily care</p>
+              <h3 className="mt-2 font-display text-3xl text-[#34354e]">A few gentle basics.</h3>
+            </div>
+            <HeartPulse size={21} className="text-[#615d7c]" />
+          </div>
+          <div className="mt-6 space-y-3">
+            <div className="rounded-xl bg-[#f4f1f6]/75 p-4"><p className="text-sm font-bold text-[#4e526e]">Clean hands first</p><p className="mt-1 text-xs leading-5 text-[#5c6077]">Wash before and after changing any period product.</p></div>
+            <div className="rounded-xl bg-[#f4f1f6]/75 p-4"><p className="text-sm font-bold text-[#4e526e]">Keep it comfortable</p><p className="mt-1 text-xs leading-5 text-[#5c6077]">Choose breathable clothing and change out of damp underwear when you can.</p></div>
+            <div className="rounded-xl bg-[#f4f1f6]/75 p-4"><p className="text-sm font-bold text-[#4e526e]">Skip internal washing</p><p className="mt-1 text-xs leading-5 text-[#5c6077]">The vagina is self-cleaning; avoid douching and strongly scented products.</p></div>
+          </div>
+        </section>
+      </section>
+
+      <section className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#71908b]">Infection prevention</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Small habits, useful protection.</h3>
+            </div>
+            <ShieldCheck size={21} className="text-[#397269]" />
+          </div>
+          <ul className="mt-6 space-y-3 text-sm leading-6 text-[#66807c]">
+            <li className="flex gap-3"><Check size={17} className="mt-1 shrink-0 text-[#397269]" /><span>Follow the changing, cleaning and storage instructions for your specific product.</span></li>
+            <li className="flex gap-3"><Check size={17} className="mt-1 shrink-0 text-[#397269]" /><span>Do not share period products, and avoid using products past their intended use.</span></li>
+            <li className="flex gap-3"><Check size={17} className="mt-1 shrink-0 text-[#397269]" /><span>Avoid douching and scented products if they irritate the vulva or change your comfort.</span></li>
+            <li className="flex gap-3"><Check size={17} className="mt-1 shrink-0 text-[#397269]" /><span>Reusable products should be rinsed, cleaned and stored as directed by the manufacturer.</span></li>
+          </ul>
+        </section>
+        <section className="rounded-2xl bg-[#f2e4d2] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9b633f]">When to seek advice</p>
+              <h3 className="mt-2 font-display text-3xl text-[#5d4536]">You do not have to work it out alone.</h3>
+            </div>
+            <CircleHelp size={21} className="text-[#a56744]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#6e5646]">Speak with a qualified clinician if you notice symptoms that are new, severe, persistent or worrying to you.</p>
+          <div className="mt-6 rounded-xl bg-[#fbf1e3]/80 p-4 text-xs leading-5 text-[#806657]">
+            <p>Examples to discuss include strong or unusual odor, unusual discharge, itching or sores, severe pain, fever, very heavy bleeding, or irritation that does not settle after stopping a product.</p>
+            <p className="mt-3 font-semibold text-[#6e5646]">If you feel seriously unwell or have an urgent concern, seek urgent medical care.</p>
+          </div>
+        </section>
+      </section>
+
+      <section id="hygiene-checklist" className="mt-6 scroll-mt-24 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#71908b]">Personal checklist</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Choose the care steps that fit today.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71908b]">This checklist is a flexible reminder, not a pass/fail test. You can check and uncheck items as your day changes.</p>
+          </div>
+          <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${completedCount === hygieneChecklistItems.length ? 'bg-[#e1efea] text-[#397269]' : 'bg-[#e8f0ea] text-[#52736f]'}`}>{completedCount}/{hygieneChecklistItems.length} complete</span>
+        </div>
+        <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#e8eee8]"><div className="h-full rounded-full bg-[#4a9a83] transition-all" style={{ width: `${(completedCount / hygieneChecklistItems.length) * 100}%` }} /></div>
+        {completedCount === 0 && <p className="mt-4 rounded-xl bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">Nothing checked yet. Start with whichever step feels useful.</p>}
+        {completedCount === hygieneChecklistItems.length && <p className="mt-4 rounded-xl bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">All checklist items are marked complete for this session.</p>}
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
+          {hygieneChecklistItems.map((item) => {
+            const checked = checkedItems.includes(item.id);
+            return (
+              <button key={item.id} type="button" onClick={() => toggleChecklistItem(item.id)} aria-pressed={checked} data-testid={`button-hygiene-check-${item.id}`} className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${checked ? 'border-[#9fcdbb] bg-[#edf5ee]' : 'border-[#e4e8df] bg-[#fbf8f0] hover:border-[#b7cfc1]'}`}>
+                <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${checked ? 'bg-[#4a9a83] text-white' : 'border border-[#cad8cd] text-transparent'}`}><Check size={14} /></span>
+                <span><span className={`block text-sm font-bold ${checked ? 'text-[#275b5a]' : 'text-[#52736f]'}`}>{item.title}</span><span className="mt-1 block text-xs leading-5 text-[#78908a]">{item.detail}</span></span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <p className="mt-6 rounded-xl border border-[#dfe5db] bg-[#fbf8f0] px-4 py-3 text-xs leading-5 text-[#8aa09a]">This page provides general educational information, not diagnosis or treatment. Product instructions and advice from a qualified clinician should take priority when they differ.</p>
+    </div>
+  );
+}
+
 function CarePage({ type }: { type: 'pcos' | 'menopause' | 'hygiene' | 'fitness' }) {
   const details = { pcos: { eyebrow: 'Support without the noise', title: 'Your body is not a problem to solve.', desc: 'A grounded library for understanding PCOS / PCOD, building sustainable routines and finding questions to bring to your clinician.', bg: 'bg-[#e6e1eb]', icon: Activity, stat: '1 in 10', statText: 'people with ovaries experience PCOS' }, menopause: { eyebrow: 'A new chapter, not an ending', title: 'Care for change, at your pace.', desc: 'Practical support for the transition through perimenopause and menopause — from sleep and energy to confidence in conversations.', bg: 'bg-[#f2e4d2]', icon: SunMedium, stat: '34+', statText: 'common experiences to make sense of' }, hygiene: { eyebrow: 'Comfort, care, confidence', title: 'The basics deserve better answers.', desc: 'Clear, shame-free guidance for menstrual hygiene, products, skin comfort and looking after yourself on every kind of day.', bg: 'bg-[#dceae1]', icon: Droplets, stat: '24 hr', statText: 'is the longest to leave a tampon in' }, fitness: { eyebrow: 'Move in a way that fits', title: 'Strength can feel like care.', desc: 'Short, adaptable movement and self-care practices for your energy today — not a version of you that does not exist.', bg: 'bg-[#e1e4ee]', icon: Dumbbell, stat: '08 min', statText: 'is enough for a meaningful reset' } }[type]; const Icon = details.icon; return <div className="page-enter"><div className={`relative overflow-hidden rounded-3xl ${details.bg} p-7 md:p-12`}><div className="relative z-10 max-w-2xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#52736f]">{details.eyebrow}</p><h2 className="mt-3 font-display text-5xl leading-[.98] tracking-[-.05em] text-[#173b3d] md:text-6xl">{details.title}</h2><p className="mt-6 max-w-xl text-sm leading-7 text-[#5f7975]">{details.desc}</p><div className="mt-8 flex flex-wrap gap-3"><Button data-testid={`button-${type}-start`}><BookOpen size={16} /> Start with the guide</Button><Button variant="outline" data-testid={`button-${type}-save`}><Plus size={16} /> Save for later</Button></div></div><div className="absolute -bottom-16 -right-12 grid h-64 w-64 place-items-center rounded-full border border-[#ffffff]/60"><div className="grid h-44 w-44 place-items-center rounded-full border border-[#ffffff]/70"><Icon size={44} className="text-[#52736f]" /></div></div></div><div className="mt-6 grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl bg-[#173b3d] p-6 text-[#f7f2e8]"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#9bd6c2]">Worth knowing</p><p className="mt-4 font-display text-5xl">{details.stat}</p><p className="mt-2 max-w-[210px] text-sm leading-6 text-[#b8cec4]">{details.statText}.</p><Link href="/progress" data-testid={`link-${type}-progress`} className="mt-7 inline-flex items-center gap-1 text-xs font-bold text-[#a9ddc8]">Track your experience <ArrowRight size={13} /></Link></section><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Explore next</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><Guide title={type === 'pcos' ? 'Understanding symptoms' : type === 'menopause' ? 'What is changing?' : type === 'hygiene' ? 'Products, simply' : 'Low-energy movement'} icon={BookOpen} /><Guide title={type === 'pcos' ? 'Questions for your doctor' : type === 'menopause' ? 'Sleep & temperature' : type === 'hygiene' ? 'Skin comfort' : 'Build a reset ritual'} icon={CircleHelp} /><Guide title={type === 'pcos' ? 'Steady routines' : type === 'menopause' ? 'Strength & bone health' : type === 'hygiene' ? 'When to get help' : 'Recovery matters'} icon={Sparkles} /></div></section></div><section className="mt-6 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">A note from Nourish Her</p><h3 className="mt-2 font-display text-2xl">Good information should leave you feeling more capable.</h3></div><button data-testid={`button-${type}-listen`} className="inline-flex items-center gap-2 rounded-lg bg-[#e8f0ea] px-4 py-2.5 text-xs font-bold text-[#397269] hover:bg-[#dcebe0]"><Play size={15} /> Listen · 04:12</button></div></section></div>; }
 function Guide({ title, icon: Icon }: { title: string; icon: IconType }) { return <button data-testid={`button-guide-${title.toLowerCase().replaceAll(' ', '-')}`} className="rounded-xl border border-[#e4e8df] p-4 text-left hover:border-[#9fbdb0]"><Icon size={18} className="text-[#397269]" /><p className="mt-5 text-sm font-semibold leading-5 text-[#52736f]">{title}</p><ArrowRight size={14} className="mt-3 text-[#8aa09a]" /></button>; }
@@ -1635,7 +1878,7 @@ function NotFound() { return <div className="grid min-h-[100dvh] place-items-cen
 function RoutedErrorBoundary({ children }: { children: ReactNode }) { const [location] = useLocation(); return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>; }
 
 function Router() {
-  return <RoutedErrorBoundary><Switch><Route path="/" component={Home} /><Route path="/auth" component={Auth} /><Route path="/onboarding" component={Onboarding} /><Route path="/dashboard"><Shell><Dashboard /></Shell></Route><Route path="/cycle"><Shell><Cycle /></Shell></Route><Route path="/nutrition"><Shell><Nutrition /></Shell></Route><Route path="/pcos"><Shell><PcosSupport /></Shell></Route><Route path="/menopause"><Shell><MenopauseSupport /></Shell></Route><Route path="/hygiene"><Shell><CarePage type="hygiene" /></Shell></Route><Route path="/fitness"><Shell><CarePage type="fitness" /></Shell></Route><Route path="/progress"><Shell><Progress /></Shell></Route><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
+  return <RoutedErrorBoundary><Switch><Route path="/" component={Home} /><Route path="/auth" component={Auth} /><Route path="/onboarding" component={Onboarding} /><Route path="/dashboard"><Shell><Dashboard /></Shell></Route><Route path="/cycle"><Shell><Cycle /></Shell></Route><Route path="/nutrition"><Shell><Nutrition /></Shell></Route><Route path="/pcos"><Shell><PcosSupport /></Shell></Route><Route path="/menopause"><Shell><MenopauseSupport /></Shell></Route><Route path="/hygiene"><Shell><HygieneSupport /></Shell></Route><Route path="/fitness"><Shell><CarePage type="fitness" /></Shell></Route><Route path="/progress"><Shell><Progress /></Shell></Route><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
 }
 
 function App() {
