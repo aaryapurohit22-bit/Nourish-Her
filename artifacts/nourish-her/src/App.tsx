@@ -754,12 +754,309 @@ function GuidanceCard({ icon: Icon, label, text }: { icon: IconType; label: stri
   );
 }
 
+type MenopauseStatus = '' | 'none' | 'perimenopause' | 'menopause' | 'postmenopause';
+type PcosStatus = '' | 'yes' | 'no' | 'unsure';
+type NutritionProfile = {
+  age: string;
+  bmi: string;
+  phase: CyclePhaseKey | '';
+  menopauseStatus: MenopauseStatus;
+  pcosStatus: PcosStatus;
+};
+
+type NutritionMeal = {
+  title: string;
+  type: 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
+  time: string;
+  desc: string;
+  tags: string[];
+};
+
+const nutritionFilters = ['All', 'Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+
+const generalNutritionMeals: NutritionMeal[] = [
+  { title: 'Yoghurt, oats & fruit', type: 'Breakfast', time: '10 min', desc: 'A flexible bowl with oats, yoghurt, fruit and seeds.', tags: ['Protein', 'Fibre'] },
+  { title: 'Herby lentil bowl', type: 'Lunch', time: '25 min', desc: 'Lentils, greens, roasted vegetables and a lemon dressing.', tags: ['Plant protein', 'Fibre'] },
+  { title: 'Apple with nut butter', type: 'Snacks', time: '5 min', desc: 'A simple snack with fruit and a satisfying source of fat.', tags: ['Quick', 'Flexible'] },
+  { title: 'Tofu sesame rice', type: 'Dinner', time: '30 min', desc: 'Tofu, rice, greens and vegetables with a sesame dressing.', tags: ['Protein', 'Colour'] },
+];
+
+const phaseNutritionMeals: Record<CyclePhaseKey, NutritionMeal[]> = {
+  menstrual: [
+    { title: 'Warm berry porridge', type: 'Breakfast', time: '15 min', desc: 'Oats with berries, yoghurt or seeds, and a warming spice.', tags: ['Comforting', 'Fibre'] },
+    { title: 'Lentil & spinach bowl', type: 'Lunch', time: '25 min', desc: 'Lentils, spinach, roasted vegetables and a bright dressing.', tags: ['Iron-rich', 'Plant protein'] },
+    { title: 'Dates with tahini', type: 'Snacks', time: '5 min', desc: 'A small, satisfying combination that can be adjusted to appetite.', tags: ['Quick', 'Flexible'] },
+    { title: 'Bean & vegetable stew', type: 'Dinner', time: '35 min', desc: 'Beans, vegetables and wholegrain toast or rice for a gentle meal.', tags: ['Fibre', 'One-pot'] },
+  ],
+  follicular: [
+    { title: 'Yoghurt, oats & fruit', type: 'Breakfast', time: '10 min', desc: 'A fresh bowl with oats, yoghurt, fruit and seeds.', tags: ['Protein', 'Fibre'] },
+    { title: 'Herby lentil bowl', type: 'Lunch', time: '25 min', desc: 'Warm lentils, roasted vegetables, greens and lemon tahini.', tags: ['Plant protein', 'Colour'] },
+    { title: 'Apple with nut butter', type: 'Snacks', time: '5 min', desc: 'Crisp fruit with a simple, satisfying accompaniment.', tags: ['Quick', 'Flexible'] },
+    { title: 'Salmon sesame rice', type: 'Dinner', time: '30 min', desc: 'Salmon or tofu with rice, cucumber, greens and sesame.', tags: ['Protein', 'Omega-3'] },
+  ],
+  ovulation: [
+    { title: 'Egg & avocado toast', type: 'Breakfast', time: '10 min', desc: 'Toast with eggs, avocado and a side of seasonal fruit.', tags: ['Protein', 'Quick'] },
+    { title: 'Chickpea grain salad', type: 'Lunch', time: '20 min', desc: 'Chickpeas, grains, crunchy vegetables and a yoghurt dressing.', tags: ['Fibre', 'Colour'] },
+    { title: 'Fruit & yoghurt pot', type: 'Snacks', time: '5 min', desc: 'Fruit, yoghurt and seeds in a portion that suits your appetite.', tags: ['Fresh', 'Protein'] },
+    { title: 'Tofu vegetable stir-fry', type: 'Dinner', time: '25 min', desc: 'Tofu, vegetables and noodles or rice with a savoury sauce.', tags: ['Protein', 'Flexible'] },
+  ],
+  luteal: [
+    { title: 'Overnight oats', type: 'Breakfast', time: '5 min', desc: 'Oats, yoghurt, fruit and seeds prepared for an easy start.', tags: ['Steady energy', 'Fibre'] },
+    { title: 'Sweet potato lentil plate', type: 'Lunch', time: '30 min', desc: 'Sweet potato, lentils, greens and a creamy dressing.', tags: ['Fibre', 'Plant protein'] },
+    { title: 'Trail mix & fruit', type: 'Snacks', time: '5 min', desc: 'A flexible mix of nuts, seeds, dried fruit and fresh fruit.', tags: ['Portable', 'Flexible'] },
+    { title: 'Wholegrain pasta primavera', type: 'Dinner', time: '25 min', desc: 'Wholegrain pasta with vegetables, beans and olive oil.', tags: ['Comforting', 'Fibre'] },
+  ],
+};
+
+const menopauseLabels: Record<MenopauseStatus, string> = {
+  '': 'Not set',
+  none: 'Not menopausal',
+  perimenopause: 'Perimenopause',
+  menopause: 'Menopause',
+  postmenopause: 'Postmenopause',
+};
+
 function Nutrition() {
+  const [profile, setProfile] = useState<NutritionProfile>({
+    age: '',
+    bmi: '',
+    phase: '',
+    menopauseStatus: '',
+    pcosStatus: '',
+  });
+  const [activePhase, setActivePhase] = useState<CyclePhaseKey>('menstrual');
   const [filter, setFilter] = useState('All');
-  const filters = ['All', 'Steady energy', 'Iron-rich', 'Quick'];
-  const meals = [{ title: 'Herby lentil bowl', type: 'Steady energy', time: '25 min', desc: 'Warm lentils, roasted carrots, greens and lemon tahini.', tags: ['Protein', 'Fibre'] }, { title: 'Spinach & egg toast', type: 'Quick', time: '10 min', desc: 'Soft eggs, wilted spinach and sourdough with seeds.', tags: ['Iron-rich', 'Quick'] }, { title: 'Salmon sesame rice', type: 'Iron-rich', time: '30 min', desc: 'Miso salmon with cucumber, brown rice and edamame.', tags: ['Protein', 'Omega-3'] }];
-  const shown = filter === 'All' ? meals : meals.filter((meal) => meal.type === filter || meal.tags.includes(filter));
-  return <div className="page-enter"><SectionTitle eyebrow="Food that supports your day" title="What sounds good?" description="Flexible ideas for steadier energy, without turning eating into another task." action={<Button variant="outline" data-testid="button-nutrition-add"><Plus size={16} /> Add to plan</Button>} /><div className="mb-7 flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} data-testid={`button-nutrition-filter-${item.toLowerCase().replaceAll(' ', '-')}`} className={`rounded-full border px-4 py-2 text-xs font-semibold ${filter === item ? 'border-[#1e6364] bg-[#1e6364] text-[#fbf8f0]' : 'border-[#d7dfd7] bg-[#fbf8f0] text-[#71908b] hover:border-[#9fbdb0]'}`}>{item}</button>)}</div><div className="grid gap-5 lg:grid-cols-[.85fr_1.15fr]"><section className="rounded-2xl bg-[#1e6364] p-6 text-[#f7f2e8] md:p-8"><div className="flex items-center justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">Today’s anchors</p><h3 className="mt-2 font-display text-3xl">A little steadier.</h3></div><Utensils size={21} className="text-[#a9ddc8]" /></div><p className="mt-4 text-sm leading-6 text-[#c3d8ce]">Rather than perfect meals, aim for three things that help your body feel supported.</p><div className="mt-8 space-y-3"><Anchor title="Protein at breakfast" detail="Yoghurt, eggs, tofu or beans" done /><Anchor title="Colour on your plate" detail="Add one fruit or vegetable" /><Anchor title="A proper pause" detail="Eat away from your screen" /></div></section><section><div className="mb-4 flex items-center justify-between"><h3 className="font-display text-2xl">Ideas for you</h3><button data-testid="button-nutrition-refresh" className="text-xs font-bold text-[#397269] hover:underline">Refresh ideas</button></div><div className="space-y-3">{shown.map((meal) => <Meal key={meal.title} {...meal} />)}</div>{shown.length === 0 && <div className="rounded-2xl border border-dashed border-[#cfdacf] p-8 text-center text-sm text-[#71908b]">No ideas in this view yet.</div>}</section></div></div>;
+  const [waterGlasses, setWaterGlasses] = useState(0);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const hasCompleteProfile = Boolean(profile.age && profile.bmi && profile.phase && profile.menopauseStatus);
+  const phaseLabel = profile.phase ? cyclePhaseData[profile.phase].label : 'Not set';
+  const meals = profile.phase ? phaseNutritionMeals[profile.phase] : generalNutritionMeals;
+  const shownMeals = filter === 'All' ? meals : meals.filter((meal) => meal.type === filter);
+  const currentGuidance = cyclePhaseData[activePhase];
+
+  const updateProfile = (field: keyof NutritionProfile, value: string) => {
+    setProfile((current) => ({ ...current, [field]: value }));
+    setProfileSaved(false);
+    if (field === 'phase' && value) setActivePhase(value as CyclePhaseKey);
+  };
+
+  const saveProfile = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProfileSaved(true);
+  };
+
+  const scrollToProfile = () => {
+    document.getElementById('nutrition-profile')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const personalizationItems = [
+    `Age: ${profile.age || 'Not set'}`,
+    `BMI: ${profile.bmi || 'Not set'}`,
+    `Cycle phase: ${phaseLabel}`,
+    `Menopause: ${menopauseLabels[profile.menopauseStatus]}`,
+  ];
+
+  const pcosMessage = profile.pcosStatus === 'yes'
+    ? 'Your profile marks PCOS/PCOD support as relevant. These ideas focus on regular nourishment, balanced plates and flexible movement.'
+    : profile.pcosStatus === 'no'
+      ? 'Your profile does not currently mark PCOS/PCOD support as relevant. You can update this in your profile anytime.'
+      : 'If PCOS/PCOD support is relevant to you, set it in your profile for clearer context. General guidance is shown below.';
+  const menopauseMessage = profile.menopauseStatus && profile.menopauseStatus !== 'none'
+    ? `Your profile says ${menopauseLabels[profile.menopauseStatus].toLowerCase()} support is relevant. Focus on practical nourishment that fits your preferences and energy.`
+    : profile.menopauseStatus === 'none'
+      ? 'Your profile does not currently mark menopause support as relevant. You can update this anytime.'
+      : 'Set your menopausal status if you want this guidance labelled more clearly. General support is shown below.';
+
+  return (
+    <div className="page-enter">
+      <SectionTitle
+        eyebrow="Food that supports your day"
+        title="A plan that meets you where you are."
+        description="Use your own profile details to shape flexible meal ideas and supportive nutrition guidance. Nothing here is a diagnosis or a diet prescription."
+        action={
+          <Button variant="outline" onClick={scrollToProfile} data-testid="button-nutrition-update-profile">
+            <Settings size={16} /> Update profile
+          </Button>
+        }
+      />
+
+      <div className="grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
+        <section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Health profile context</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">Recommendations use what you enter.</h3>
+            </div>
+            <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${hasCompleteProfile ? 'bg-[#e1efea] text-[#397269]' : 'bg-[#f4e8d4] text-[#9b633f]'}`}>
+              {hasCompleteProfile ? 'Profile ready' : 'Complete your profile'}
+            </span>
+          </div>
+          <div className="mt-6 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {personalizationItems.map((item) => (
+              <div key={item} className="rounded-xl bg-[#f0f3ec] px-3.5 py-3 text-xs font-semibold text-[#52736f]">{item}</div>
+            ))}
+          </div>
+          {!hasCompleteProfile && (
+            <p className="mt-5 rounded-xl bg-[#edf5ee] px-4 py-3 text-xs leading-5 text-[#52736f]">
+              Some details are <span className="font-bold text-[#275b5a]">Not set</span>. Complete your profile below for more relevant context; until then, meal ideas remain general and non-restrictive.
+            </p>
+          )}
+        </section>
+
+        <section className="rounded-2xl bg-[#dceae1] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#52736f]">Daily water tracker</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em] text-[#173b3d]">{waterGlasses} glasses</h3>
+            </div>
+            <Droplets size={21} className="text-[#397269]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#52736f]">Log water as it suits you today. There is no fixed target here.</p>
+          <div className="mt-7 flex items-center gap-3">
+            <button type="button" onClick={() => setWaterGlasses((count) => Math.max(0, count - 1))} disabled={waterGlasses === 0} aria-label="Remove one glass of water" data-testid="button-water-remove" className="grid h-10 w-10 place-items-center rounded-lg border border-[#b8d2c1] text-lg font-semibold text-[#397269] hover:bg-[#cfe3d4] disabled:cursor-not-allowed disabled:opacity-40">−</button>
+            <div className="flex-1 rounded-lg bg-[#f7f2e8]/75 px-4 py-3 text-center text-xs font-semibold text-[#52736f]">{waterGlasses === 0 ? 'Nothing logged yet' : 'Keep listening to your thirst'}</div>
+            <button type="button" onClick={() => setWaterGlasses((count) => count + 1)} aria-label="Add one glass of water" data-testid="button-water-add" className="grid h-10 w-10 place-items-center rounded-lg bg-[#1e6364] text-lg font-semibold text-[#fbf8f0] hover:bg-[#174e50]">+</button>
+          </div>
+          <p className="mt-4 text-[11px] leading-5 text-[#66807c]">If you have clinician-provided fluid guidance, follow that instead.</p>
+        </section>
+      </div>
+
+      <section className="mt-5 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Personalized meal ideas</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">A little steadier.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71908b]">{hasCompleteProfile ? `Using your entered age (${profile.age}), BMI (${profile.bmi}), ${phaseLabel.toLowerCase()} phase and ${menopauseLabels[profile.menopauseStatus].toLowerCase()}. BMI is context only; no weight target is applied.` : profile.age || profile.bmi || profile.phase || profile.menopauseStatus ? 'Some profile details are entered. Complete the remaining fields for more relevant context.' : 'Choose a cycle phase in your profile to make these ideas more relevant.'}</p>
+          </div>
+          <span className="w-fit rounded-full bg-[#e8f0ea] px-3 py-1.5 text-xs font-bold text-[#397269]">Educational guidance</span>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {nutritionFilters.map((item) => (
+            <button key={item} type="button" onClick={() => setFilter(item)} data-testid={`button-nutrition-filter-${item.toLowerCase()}`} className={`rounded-full border px-4 py-2 text-xs font-semibold ${filter === item ? 'border-[#1e6364] bg-[#1e6364] text-[#fbf8f0]' : 'border-[#d7dfd7] bg-[#fbf8f0] text-[#71908b] hover:border-[#9fbdb0]'}`}>{item}</button>
+          ))}
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {shownMeals.map((meal) => <Meal key={meal.title} {...meal} />)}
+        </div>
+        {shownMeals.length === 0 && <div className="mt-5 rounded-2xl border border-dashed border-[#cfdacf] p-8 text-center text-sm text-[#71908b]">No ideas in this view yet.</div>}
+      </section>
+
+      <section className="mt-5 rounded-2xl bg-[#e4e1eb] p-6 md:p-8">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#686381]">Nutrition across the cycle</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em] text-[#34354e]">Four phases, four gentle focuses.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5c6077]">Explore general ideas for nutrition, hydration, movement and self-care without treating any phase as a rulebook.</p>
+          </div>
+          <span className="w-fit rounded-full bg-[#f4f1f6]/75 px-3 py-1.5 text-xs font-bold text-[#615d7c]">No restrictive targets</span>
+        </div>
+        <div className="mt-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {cyclePhaseKeys.map((key) => {
+            const item = cyclePhaseData[key];
+            const isActive = activePhase === key;
+            return (
+              <button key={key} type="button" onClick={() => setActivePhase(key)} data-testid={`button-nutrition-phase-${key}`} className={`rounded-xl border p-4 text-left transition-colors ${isActive ? 'border-[#b9b1cd] bg-[#f4f1f6]' : 'border-[#d8d6df] bg-[#f0edf3]/60 hover:border-[#b9b1cd]'}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg ${item.soft}`}><span className={`h-2.5 w-2.5 rounded-full ${item.color}`} /></span>
+                  {isActive && <Check size={15} className="text-[#615d7c]" />}
+                </div>
+                <p className="mt-5 text-sm font-bold text-[#4e526e]">{item.label}</p>
+                <div className="mt-4 space-y-2.5 text-xs leading-5 text-[#5c6077]">
+                  <p><span className="font-bold text-[#686381]">Nutrition:</span> {item.guidance.nutrition}</p>
+                  <p><span className="font-bold text-[#686381]">Hydration:</span> {item.guidance.hydration}</p>
+                  <p><span className="font-bold text-[#686381]">Movement:</span> {item.guidance.exercise}</p>
+                  <p><span className="font-bold text-[#686381]">Self-care:</span> {item.guidance.selfCare}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-5 rounded-xl bg-[#f4f1f6]/75 px-4 py-3 text-xs leading-5 text-[#5c6077]">Currently exploring: <span className="font-bold text-[#4e526e]">{currentGuidance.label}</span>. This selection only changes the educational focus; it does not change your profile until you choose a phase there.</p>
+      </section>
+
+      <section className="mt-5 grid gap-5 lg:grid-cols-2">
+        <section className="rounded-2xl bg-[#1e6364] p-6 text-[#f7f2e8] md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">PCOS / PCOD support</p>
+              <h3 className="mt-2 font-display text-2xl">Steady, flexible nourishment.</h3>
+            </div>
+            <Activity size={20} className="text-[#a9ddc8]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#c3d8ce]">{pcosMessage}</p>
+          <div className="mt-6 rounded-xl bg-[#2c7371] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#a9ddc8]">General ideas</p>
+            <p className="mt-2 text-sm leading-6 text-[#e2efe8]">Pair foods you enjoy across protein, fibre, colour and satisfying fats. Regular meals can be useful; the right rhythm is personal.</p>
+          </div>
+        </section>
+        <section className="rounded-2xl bg-[#f2e4d2] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#9b633f]">Menopause support</p>
+              <h3 className="mt-2 font-display text-2xl text-[#5d4536]">Nourishment through change.</h3>
+            </div>
+            <SunMedium size={20} className="text-[#a56744]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#6e5646]">{menopauseMessage}</p>
+          <div className="mt-6 rounded-xl bg-[#fbf1e3]/80 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#9b633f]">General ideas</p>
+            <p className="mt-2 text-sm leading-6 text-[#6e5646]">Include foods that provide protein, calcium, fibre and colour in ways that fit your preferences and culture.</p>
+          </div>
+        </section>
+      </section>
+
+      <form id="nutrition-profile" onSubmit={saveProfile} className="mt-5 scroll-mt-24 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Health profile</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Keep your context up to date.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71908b]">Enter only what you want to use. These details stay in frontend state for this session and are not sent anywhere.</p>
+          </div>
+          {profileSaved && <span className="rounded-full bg-[#e1efea] px-3 py-1.5 text-xs font-bold text-[#397269]">Profile updated</span>}
+        </div>
+        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <label className="block text-sm font-semibold text-[#52736f]">
+            Age <span className="font-normal text-[#8aa09a]">(optional)</span>
+            <input type="number" min="0" max="120" value={profile.age} onChange={(event) => updateProfile('age', event.target.value)} placeholder="Not set" data-testid="input-nutrition-age" className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25" />
+          </label>
+          <label className="block text-sm font-semibold text-[#52736f]">
+            BMI <span className="font-normal text-[#8aa09a]">(optional)</span>
+            <input type="number" min="0" max="100" step="0.1" value={profile.bmi} onChange={(event) => updateProfile('bmi', event.target.value)} placeholder="Not set" data-testid="input-nutrition-bmi" className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25" />
+          </label>
+          <label className="block text-sm font-semibold text-[#52736f]">
+            Menstrual phase
+            <select value={profile.phase} onChange={(event) => updateProfile('phase', event.target.value)} data-testid="select-nutrition-phase" className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25">
+              <option value="">Not set</option>
+              {cyclePhaseKeys.map((key) => <option key={key} value={key}>{cyclePhaseData[key].label}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-[#52736f]">
+            Menopausal status
+            <select value={profile.menopauseStatus} onChange={(event) => updateProfile('menopauseStatus', event.target.value)} data-testid="select-nutrition-menopause" className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25">
+              <option value="">Not set</option>
+              <option value="none">Not menopausal</option>
+              <option value="perimenopause">Perimenopause</option>
+              <option value="menopause">Menopause</option>
+              <option value="postmenopause">Postmenopause</option>
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-[#52736f]">
+            PCOS / PCOD
+            <select value={profile.pcosStatus} onChange={(event) => updateProfile('pcosStatus', event.target.value)} data-testid="select-nutrition-pcos" className="mt-2 w-full rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25">
+              <option value="">Not set</option>
+              <option value="yes">Relevant to me</option>
+              <option value="no">Not relevant</option>
+              <option value="unsure">Not sure</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-6 flex flex-col justify-between gap-4 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center">
+          <p className="max-w-2xl text-xs leading-5 text-[#8aa09a]">No calorie target, weight-loss target or restrictive diet is used. If you have a health condition or clinician-provided plan, use that as your primary guidance.</p>
+          <Button type="submit" data-testid="button-nutrition-save-profile"><Check size={15} /> Save profile details</Button>
+        </div>
+      </form>
+    </div>
+  );
 }
 function Anchor({ title, detail, done = false }: { title: string; detail: string; done?: boolean }) { return <div className="flex items-center gap-3 rounded-xl bg-[#2c7371] p-3.5"><span className={`grid h-8 w-8 place-items-center rounded-full ${done ? 'bg-[#9bd6c2] text-[#173b3d]' : 'border border-[#70a99a] text-[#a9ddc8]'}`}>{done ? <Check size={15} /> : <span className="text-xs"> </span>}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-[#b8d4c8]">{detail}</p></div></div>; }
 function Meal({ title, type, time, desc, tags }: { title: string; type: string; time: string; desc: string; tags: string[] }) { return <button data-testid={`button-meal-${title.toLowerCase().replaceAll(' ', '-')}`} className="group flex w-full items-center justify-between rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-4 text-left shadow-card hover:border-[#9fbdb0]"><div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#f2e4d2] text-[#a56744]"><Leaf size={21} /></div><div><div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold text-[#356562]">{title}</h4><span className="text-[10px] font-bold uppercase tracking-wider text-[#9aaba3]">{type}</span></div><p className="mt-1 text-xs leading-5 text-[#78908a]">{desc}</p><div className="mt-2 flex gap-1.5">{tags.map((tag) => <span key={tag} className="rounded-full bg-[#edf5ee] px-2 py-0.5 text-[10px] font-semibold text-[#52736f]">{tag}</span>)}</div></div></div><ChevronRight size={17} className="shrink-0 text-[#8aa09a] transition-transform group-hover:translate-x-1" /></button>; }
