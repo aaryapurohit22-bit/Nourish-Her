@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ClipboardList, Droplets,
   Dumbbell, HeartPulse, Home as HomeIcon, Leaf, LineChart, Menu, Moon,
   MoreHorizontal, MoveRight, Play, Plus, Settings, ShieldCheck,
-  Sparkles, SunMedium, Target, Utensils, X, Zap
+  Scale, Sparkles, SunMedium, Target, Utensils, X, Zap
 } from 'lucide-react';
 import { Link, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
@@ -1061,6 +1061,305 @@ function Nutrition() {
 function Anchor({ title, detail, done = false }: { title: string; detail: string; done?: boolean }) { return <div className="flex items-center gap-3 rounded-xl bg-[#2c7371] p-3.5"><span className={`grid h-8 w-8 place-items-center rounded-full ${done ? 'bg-[#9bd6c2] text-[#173b3d]' : 'border border-[#70a99a] text-[#a9ddc8]'}`}>{done ? <Check size={15} /> : <span className="text-xs"> </span>}</span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-[#b8d4c8]">{detail}</p></div></div>; }
 function Meal({ title, type, time, desc, tags }: { title: string; type: string; time: string; desc: string; tags: string[] }) { return <button data-testid={`button-meal-${title.toLowerCase().replaceAll(' ', '-')}`} className="group flex w-full items-center justify-between rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-4 text-left shadow-card hover:border-[#9fbdb0]"><div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#f2e4d2] text-[#a56744]"><Leaf size={21} /></div><div><div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold text-[#356562]">{title}</h4><span className="text-[10px] font-bold uppercase tracking-wider text-[#9aaba3]">{type}</span></div><p className="mt-1 text-xs leading-5 text-[#78908a]">{desc}</p><div className="mt-2 flex gap-1.5">{tags.map((tag) => <span key={tag} className="rounded-full bg-[#edf5ee] px-2 py-0.5 text-[10px] font-semibold text-[#52736f]">{tag}</span>)}</div></div></div><ChevronRight size={17} className="shrink-0 text-[#8aa09a] transition-transform group-hover:translate-x-1" /></button>; }
 
+type PcosSupportMode = 'not-selected' | 'using' | 'not-now';
+type PcosSymptomEntry = { id: number; symptoms: string[]; note: string; date: string };
+type PcosWeightEntry = { id: number; weight: string; unit: 'kg' | 'lb'; date: string };
+
+const pcosSymptomOptions = [
+  'Cycle changes',
+  'Acne or skin changes',
+  'Hair changes',
+  'Pelvic discomfort',
+  'Fatigue',
+  'Mood changes',
+  'Bloating',
+  'Sleep changes',
+];
+
+const pcosMealIdeas = [
+  { title: 'Yoghurt, oats & fruit', desc: 'A flexible breakfast with protein, fibre, fruit and seeds.', tags: ['Breakfast', 'Fibre'] },
+  { title: 'Lentil grain bowl', desc: 'Lentils, grains, greens and vegetables with a dressing you enjoy.', tags: ['Lunch', 'Plant protein'] },
+  { title: 'Egg or bean toast', desc: 'Wholegrain toast with eggs or beans and a side of colour.', tags: ['Quick', 'Flexible'] },
+  { title: 'Tofu vegetable stir-fry', desc: 'Tofu, vegetables and rice or noodles with a satisfying sauce.', tags: ['Dinner', 'Balanced'] },
+];
+
+const pcosMovementIdeas = [
+  { title: 'Walking', detail: 'A short walk can be a useful way to add movement without making the day more demanding.', icon: Activity },
+  { title: 'Yoga', detail: 'Choose a gentle or flowing practice that feels supportive rather than punishing.', icon: Leaf },
+  { title: 'Stretching', detail: 'Try a few minutes of easy mobility when you want a low-pressure reset.', icon: MoveRight },
+  { title: 'Strength training', detail: 'Build gradually with bodyweight, bands or weights at a pace that suits you.', icon: Dumbbell },
+];
+
+function getPcosEntryDateLabel(date = new Date()) {
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+}
+
+function PcosSupport() {
+  const [mode, setMode] = useState<PcosSupportMode>('not-selected');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [symptomNote, setSymptomNote] = useState('');
+  const [symptomEntries, setSymptomEntries] = useState<PcosSymptomEntry[]>([]);
+  const [symptomSaved, setSymptomSaved] = useState(false);
+  const [weightTrackingEnabled, setWeightTrackingEnabled] = useState(false);
+  const [weight, setWeight] = useState('');
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
+  const [weightEntries, setWeightEntries] = useState<PcosWeightEntry[]>([]);
+  const [weightSaved, setWeightSaved] = useState(false);
+
+  const toggleSymptom = (symptom: string) => {
+    setSelectedSymptoms((current) => current.includes(symptom) ? current.filter((item) => item !== symptom) : [...current, symptom]);
+    setSymptomSaved(false);
+  };
+
+  const saveSymptomEntry = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (selectedSymptoms.length === 0) return;
+    setSymptomEntries((current) => [
+      {
+        id: Date.now(),
+        symptoms: selectedSymptoms,
+        note: symptomNote.trim(),
+        date: getPcosEntryDateLabel(),
+      },
+      ...current,
+    ]);
+    setSelectedSymptoms([]);
+    setSymptomNote('');
+    setSymptomSaved(true);
+  };
+
+  const saveWeightEntry = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!weight.trim()) return;
+    setWeightEntries((current) => [
+      { id: Date.now(), weight: weight.trim(), unit: weightUnit, date: getPcosEntryDateLabel() },
+      ...current,
+    ]);
+    setWeight('');
+    setWeightSaved(true);
+  };
+
+  const latestWeight = weightEntries[0];
+  const earliestWeight = weightEntries[weightEntries.length - 1];
+  const weightDifference = latestWeight && earliestWeight && weightEntries.length > 1
+    ? Number(latestWeight.weight) - Number(earliestWeight.weight)
+    : null;
+
+  if (mode !== 'using') {
+    return (
+      <div className="page-enter">
+        <section className="relative overflow-hidden rounded-3xl bg-[#e6e1eb] p-7 md:p-12">
+          <div className="relative z-10 max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#615d7c]">Optional support space</p>
+            <h2 className="mt-3 font-display text-5xl leading-[.98] tracking-[-.05em] text-[#34354e] md:text-6xl">Support that starts with your choice.</h2>
+            <p className="mt-6 max-w-xl text-sm leading-7 text-[#5c6077]">This page is here if tracking symptoms, exploring balanced routines or keeping personal notes would feel useful. It does not assume you have PCOS/PCOD, and it does not diagnose or treat.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button onClick={() => setMode('using')} data-testid="button-pcos-opt-in"><Activity size={16} /> Use this support space</Button>
+              <Button variant="outline" onClick={() => setMode('not-now')} data-testid="button-pcos-not-now">Not right now</Button>
+            </div>
+          </div>
+          <div className="absolute -bottom-16 -right-12 grid h-64 w-64 place-items-center rounded-full border border-[#ffffff]/60">
+            <div className="grid h-44 w-44 place-items-center rounded-full border border-[#ffffff]/70"><Activity size={44} className="text-[#686381]" /></div>
+          </div>
+        </section>
+        <section className="mt-6 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex items-start gap-4">
+            <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#397269]" />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">A clear boundary</p>
+              <h3 className="mt-2 font-display text-2xl tracking-[-.03em]">You decide what belongs here.</h3>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#71908b]">Nothing is pre-filled. If you choose to use this space, only the symptoms, notes and optional weight entries you add will appear during this session.</p>
+            </div>
+          </div>
+          {mode === 'not-now' && (
+            <div className="mt-6 flex flex-col justify-between gap-4 rounded-xl bg-[#edf5ee] p-4 sm:flex-row sm:items-center">
+              <p className="text-sm font-semibold text-[#52736f]">This support space is paused. You can return whenever it feels useful.</p>
+              <button type="button" onClick={() => setMode('using')} className="w-fit rounded-lg px-3 py-2 text-sm font-bold text-[#397269] hover:bg-[#dfeee2]" data-testid="button-pcos-reopen">Use it now</button>
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter">
+      <section className="relative overflow-hidden rounded-3xl bg-[#e6e1eb] p-7 md:p-12">
+        <div className="relative z-10 max-w-2xl">
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#615d7c]">Your optional support space</p>
+          <h2 className="mt-3 font-display text-5xl leading-[.98] tracking-[-.05em] text-[#34354e] md:text-6xl">Make space for what you notice.</h2>
+          <p className="mt-6 max-w-xl text-sm leading-7 text-[#5c6077]">Use this private-on-the-page workspace to notice symptoms, explore balanced routines and keep progress notes that are meaningful to you.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-[#f4f1f6]/80 px-3 py-1.5 text-xs font-bold text-[#615d7c]">No diagnosis here</span>
+            <button type="button" onClick={() => setMode('not-now')} className="rounded-lg px-3 py-2 text-xs font-bold text-[#615d7c] hover:bg-[#f4f1f6]/70" data-testid="button-pcos-stop-using">Stop using this section</button>
+          </div>
+        </div>
+        <div className="absolute -bottom-16 -right-12 grid h-64 w-64 place-items-center rounded-full border border-[#ffffff]/60">
+          <div className="grid h-44 w-44 place-items-center rounded-full border border-[#ffffff]/70"><Activity size={44} className="text-[#686381]" /></div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Symptom entries</p><ClipboardList size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-4xl tracking-[-.04em]">{symptomEntries.length}</p>
+          <p className="mt-1 text-xs text-[#78908a]">{symptomEntries.length === 0 ? 'Nothing logged yet' : 'Created on this page'}</p>
+        </div>
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Weight entries</p><Scale size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-4xl tracking-[-.04em]">{weightTrackingEnabled ? weightEntries.length : '—'}</p>
+          <p className="mt-1 text-xs text-[#78908a]">{weightTrackingEnabled ? (weightEntries.length === 0 ? 'Optional tracker is empty' : 'Created on this page') : 'Optional and turned off'}</p>
+        </div>
+        <div className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-5 shadow-card">
+          <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#71908b]">Latest check-in</p><HeartPulse size={18} className="text-[#397269]" /></div>
+          <p className="mt-5 font-display text-2xl tracking-[-.04em]">{symptomEntries[0]?.date || weightEntries[0]?.date || 'Not yet'}</p>
+          <p className="mt-1 text-xs text-[#78908a]">Only your entries appear here</p>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+        <form onSubmit={saveSymptomEntry} className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Symptom tracker</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">What would you like to notice?</h3>
+              <p className="mt-2 text-sm leading-6 text-[#71908b]">Select anything that feels relevant today. These options are for personal tracking, not diagnosis.</p>
+            </div>
+            <ClipboardList size={21} className="shrink-0 text-[#397269]" />
+          </div>
+          <div className="mt-7 grid gap-2 sm:grid-cols-2">
+            {pcosSymptomOptions.map((symptom) => {
+              const selected = selectedSymptoms.includes(symptom);
+              return (
+                <button key={symptom} type="button" onClick={() => toggleSymptom(symptom)} aria-pressed={selected} data-testid={`button-pcos-symptom-${symptom.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors ${selected ? 'border-[#4a9a83] bg-[#e9f3eb] text-[#1e6364]' : 'border-[#e0e5dc] bg-[#fbf8f0] text-[#52736f] hover:border-[#9fbdb0]'}`}>
+                  <span>{symptom}</span>
+                  {selected ? <span className="grid h-5 w-5 place-items-center rounded-full bg-[#4a9a83] text-white"><Check size={13} /></span> : <span className="h-5 w-5 rounded-full border border-[#cad8cd]" />}
+                </button>
+              );
+            })}
+          </div>
+          <label className="mt-6 block text-sm font-semibold text-[#52736f]">
+            Notes <span className="font-normal text-[#8aa09a]">(optional)</span>
+            <textarea value={symptomNote} onChange={(event) => { setSymptomNote(event.target.value); setSymptomSaved(false); }} placeholder="What else would be useful to remember?" rows={3} data-testid="textarea-pcos-symptom-note" className="mt-2 w-full resize-none rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal text-[#52736f] outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25" />
+          </label>
+          <div className="mt-5 flex flex-col justify-between gap-3 border-t border-[#e7ebe2] pt-5 sm:flex-row sm:items-center">
+            {symptomSaved ? <p className="text-xs font-semibold text-[#397269]">Entry added to this page.</p> : <p className="text-xs text-[#8aa09a]">{selectedSymptoms.length === 0 ? 'Choose at least one option to save.' : `${selectedSymptoms.length} selected`}</p>}
+            <Button type="submit" disabled={selectedSymptoms.length === 0} data-testid="button-pcos-save-symptom"><Plus size={15} /> Save symptom entry</Button>
+          </div>
+        </form>
+
+        <section className="rounded-2xl bg-[#1e6364] p-6 text-[#f7f2e8] md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#a9ddc8]">Logged symptoms</p>
+              <h3 className="mt-2 font-display text-3xl">Your notes, in one place.</h3>
+            </div>
+            <LineChart size={21} className="text-[#a9ddc8]" />
+          </div>
+          {symptomEntries.length === 0 ? (
+            <div className="mt-7 rounded-xl bg-[#2c7371] p-5">
+              <p className="text-sm font-semibold text-[#e2efe8]">No symptom entries yet.</p>
+              <p className="mt-2 text-xs leading-5 text-[#b8d4c8]">Saved entries will appear here. Start only when you want to.</p>
+            </div>
+          ) : (
+            <div className="mt-7 space-y-3">
+              {symptomEntries.map((entry) => (
+                <article key={entry.id} className="rounded-xl bg-[#2c7371] p-4">
+                  <div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-[#f7f2e8]">{entry.symptoms.join(' · ')}</p><span className="shrink-0 text-[10px] text-[#b8d4c8]">{entry.date}</span></div>
+                  {entry.note && <p className="mt-2 text-xs leading-5 text-[#c9dfd4]">{entry.note}</p>}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Optional health monitoring</p>
+            <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Keep weight tracking on your terms.</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71908b]">Weight is optional, personal and not a measure of progress by itself. Turn this on only if recording it feels useful to you.</p>
+          </div>
+          <button type="button" onClick={() => { setWeightTrackingEnabled((current) => !current); setWeightSaved(false); }} className={`w-fit rounded-lg px-3 py-2 text-xs font-bold ${weightTrackingEnabled ? 'bg-[#e1efea] text-[#397269]' : 'bg-[#e8eee8] text-[#52736f]'}`} data-testid="button-pcos-toggle-weight">
+            {weightTrackingEnabled ? 'Weight tracking on' : 'Use weight tracking'}
+          </button>
+        </div>
+        {!weightTrackingEnabled ? (
+          <div className="mt-6 rounded-xl bg-[#edf5ee] p-5 text-sm leading-6 text-[#52736f]">This section is currently empty because optional weight tracking is off. You can still use symptom notes, food ideas and movement guidance without it.</div>
+        ) : (
+          <div className="mt-7 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
+            <form onSubmit={saveWeightEntry} className="rounded-xl bg-[#edf5ee] p-5">
+              <div className="flex items-center gap-2"><Scale size={18} className="text-[#397269]" /><p className="text-sm font-bold text-[#275b5a]">Add a weight entry</p></div>
+              <label className="mt-5 block text-sm font-semibold text-[#52736f]">
+                Weight
+                <div className="mt-2 flex gap-2">
+                  <input type="number" min="0" step="0.1" value={weight} onChange={(event) => { setWeight(event.target.value); setWeightSaved(false); }} placeholder="Enter a value" data-testid="input-pcos-weight" className="min-w-0 flex-1 rounded-lg border border-[#cbded0] bg-[#fbf8f0] px-3.5 py-3 text-sm font-normal outline-none placeholder:text-[#a0b0aa] focus:border-[#1e6364] focus:ring-4 focus:ring-[#9bd6c2]/25" />
+                  <select value={weightUnit} onChange={(event) => setWeightUnit(event.target.value as 'kg' | 'lb')} data-testid="select-pcos-weight-unit" className="rounded-lg border border-[#cbded0] bg-[#fbf8f0] px-3 py-3 text-sm font-normal text-[#52736f] outline-none focus:border-[#1e6364]">
+                    <option value="kg">kg</option>
+                    <option value="lb">lb</option>
+                  </select>
+                </div>
+              </label>
+              <div className="mt-5 flex items-center justify-between gap-3">
+                {weightSaved ? <p className="text-xs font-semibold text-[#397269]">Weight entry added.</p> : <span />}
+                <Button type="submit" disabled={!weight.trim()}><Plus size={15} /> Save weight</Button>
+              </div>
+            </form>
+            <div>
+              <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#71908b]">Personal progress</p><h4 className="mt-2 font-display text-2xl">Your recorded history.</h4></div><LineChart size={20} className="text-[#397269]" /></div>
+              {weightEntries.length === 0 ? (
+                <div className="mt-5 rounded-xl border border-dashed border-[#cfdacf] p-6 text-sm leading-6 text-[#71908b]">No weight entries yet. Add one if you want a personal starting point.</div>
+              ) : (
+                <div className="mt-5">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl bg-[#f0f3ec] p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#71908b]">First logged</p><p className="mt-2 font-display text-2xl">{earliestWeight?.weight} {earliestWeight?.unit}</p></div>
+                    <div className="rounded-xl bg-[#f0f3ec] p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#71908b]">Latest logged</p><p className="mt-2 font-display text-2xl">{latestWeight?.weight} {latestWeight?.unit}</p></div>
+                    <div className="rounded-xl bg-[#f0f3ec] p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#71908b]">Recorded change</p><p className="mt-2 font-display text-2xl">{weightDifference === null || Number.isNaN(weightDifference) ? '—' : `${weightDifference > 0 ? '+' : ''}${weightDifference.toFixed(1)} ${latestWeight?.unit}`}</p></div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {weightEntries.map((entry) => <div key={entry.id} className="flex items-center justify-between rounded-lg border border-[#e4e8df] px-4 py-3 text-sm"><span className="font-semibold text-[#52736f]">{entry.weight} {entry.unit}</span><span className="text-xs text-[#8aa09a]">{entry.date}</span></div>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
+        <section className="rounded-2xl bg-[#dceae1] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#52736f]">Balanced nutrition</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em]">Build meals, not rules.</h3>
+            </div>
+            <Utensils size={21} className="text-[#397269]" />
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#52736f]">A flexible plate can include protein, fibre, satisfying fats, carbohydrates and colour. Your preferences, culture, budget and appetite matter.</p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {pcosMealIdeas.map((meal) => <div key={meal.title} className="rounded-xl bg-[#f7f2e8]/75 p-4"><p className="text-sm font-bold text-[#275b5a]">{meal.title}</p><p className="mt-2 text-xs leading-5 text-[#66807c]">{meal.desc}</p><div className="mt-3 flex gap-1.5">{meal.tags.map((tag) => <span key={tag} className="rounded-full bg-[#e1efea] px-2 py-0.5 text-[10px] font-semibold text-[#52736f]">{tag}</span>)}</div></div>)}
+          </div>
+        </section>
+        <section className="rounded-2xl bg-[#f2e4d2] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#9b633f]">Gentle movement</p>
+              <h3 className="mt-2 font-display text-3xl tracking-[-.03em] text-[#5d4536]">Choose what feels possible.</h3>
+            </div>
+            <Dumbbell size={21} className="text-[#a56744]" />
+          </div>
+          <div className="mt-6 space-y-3">
+            {pcosMovementIdeas.map(({ title, detail, icon: Icon }) => <div key={title} className="flex gap-3 rounded-xl bg-[#fbf1e3]/80 p-4"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f7e6cf] text-[#a56744]"><Icon size={17} /></span><div><p className="text-sm font-bold text-[#6e5646]">{title}</p><p className="mt-1 text-xs leading-5 text-[#806657]">{detail}</p></div></div>)}
+          </div>
+        </section>
+      </section>
+
+      <p className="mt-6 rounded-xl border border-[#dfe5db] bg-[#fbf8f0] px-4 py-3 text-xs leading-5 text-[#8aa09a]">This page offers general educational support only. If you are worried about symptoms or changes in your health, a qualified clinician can help you decide what to do next.</p>
+    </div>
+  );
+}
+
 function CarePage({ type }: { type: 'pcos' | 'menopause' | 'hygiene' | 'fitness' }) {
   const details = { pcos: { eyebrow: 'Support without the noise', title: 'Your body is not a problem to solve.', desc: 'A grounded library for understanding PCOS / PCOD, building sustainable routines and finding questions to bring to your clinician.', bg: 'bg-[#e6e1eb]', icon: Activity, stat: '1 in 10', statText: 'people with ovaries experience PCOS' }, menopause: { eyebrow: 'A new chapter, not an ending', title: 'Care for change, at your pace.', desc: 'Practical support for the transition through perimenopause and menopause — from sleep and energy to confidence in conversations.', bg: 'bg-[#f2e4d2]', icon: SunMedium, stat: '34+', statText: 'common experiences to make sense of' }, hygiene: { eyebrow: 'Comfort, care, confidence', title: 'The basics deserve better answers.', desc: 'Clear, shame-free guidance for menstrual hygiene, products, skin comfort and looking after yourself on every kind of day.', bg: 'bg-[#dceae1]', icon: Droplets, stat: '24 hr', statText: 'is the longest to leave a tampon in' }, fitness: { eyebrow: 'Move in a way that fits', title: 'Strength can feel like care.', desc: 'Short, adaptable movement and self-care practices for your energy today — not a version of you that does not exist.', bg: 'bg-[#e1e4ee]', icon: Dumbbell, stat: '08 min', statText: 'is enough for a meaningful reset' } }[type]; const Icon = details.icon; return <div className="page-enter"><div className={`relative overflow-hidden rounded-3xl ${details.bg} p-7 md:p-12`}><div className="relative z-10 max-w-2xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#52736f]">{details.eyebrow}</p><h2 className="mt-3 font-display text-5xl leading-[.98] tracking-[-.05em] text-[#173b3d] md:text-6xl">{details.title}</h2><p className="mt-6 max-w-xl text-sm leading-7 text-[#5f7975]">{details.desc}</p><div className="mt-8 flex flex-wrap gap-3"><Button data-testid={`button-${type}-start`}><BookOpen size={16} /> Start with the guide</Button><Button variant="outline" data-testid={`button-${type}-save`}><Plus size={16} /> Save for later</Button></div></div><div className="absolute -bottom-16 -right-12 grid h-64 w-64 place-items-center rounded-full border border-[#ffffff]/60"><div className="grid h-44 w-44 place-items-center rounded-full border border-[#ffffff]/70"><Icon size={44} className="text-[#52736f]" /></div></div></div><div className="mt-6 grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl bg-[#173b3d] p-6 text-[#f7f2e8]"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#9bd6c2]">Worth knowing</p><p className="mt-4 font-display text-5xl">{details.stat}</p><p className="mt-2 max-w-[210px] text-sm leading-6 text-[#b8cec4]">{details.statText}.</p><Link href="/progress" data-testid={`link-${type}-progress`} className="mt-7 inline-flex items-center gap-1 text-xs font-bold text-[#a9ddc8]">Track your experience <ArrowRight size={13} /></Link></section><section className="rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">Explore next</p><div className="mt-5 grid gap-3 sm:grid-cols-3"><Guide title={type === 'pcos' ? 'Understanding symptoms' : type === 'menopause' ? 'What is changing?' : type === 'hygiene' ? 'Products, simply' : 'Low-energy movement'} icon={BookOpen} /><Guide title={type === 'pcos' ? 'Questions for your doctor' : type === 'menopause' ? 'Sleep & temperature' : type === 'hygiene' ? 'Skin comfort' : 'Build a reset ritual'} icon={CircleHelp} /><Guide title={type === 'pcos' ? 'Steady routines' : type === 'menopause' ? 'Strength & bone health' : type === 'hygiene' ? 'When to get help' : 'Recovery matters'} icon={Sparkles} /></div></section></div><section className="mt-6 rounded-2xl border border-[#dfe5db] bg-[#fbf8f0] p-6 shadow-card md:p-7"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-[11px] font-bold uppercase tracking-[.16em] text-[#71908b]">A note from Nourish Her</p><h3 className="mt-2 font-display text-2xl">Good information should leave you feeling more capable.</h3></div><button data-testid={`button-${type}-listen`} className="inline-flex items-center gap-2 rounded-lg bg-[#e8f0ea] px-4 py-2.5 text-xs font-bold text-[#397269] hover:bg-[#dcebe0]"><Play size={15} /> Listen · 04:12</button></div></section></div>; }
 function Guide({ title, icon: Icon }: { title: string; icon: IconType }) { return <button data-testid={`button-guide-${title.toLowerCase().replaceAll(' ', '-')}`} className="rounded-xl border border-[#e4e8df] p-4 text-left hover:border-[#9fbdb0]"><Icon size={18} className="text-[#397269]" /><p className="mt-5 text-sm font-semibold leading-5 text-[#52736f]">{title}</p><ArrowRight size={14} className="mt-3 text-[#8aa09a]" /></button>; }
@@ -1076,7 +1375,7 @@ function NotFound() { return <div className="grid min-h-[100dvh] place-items-cen
 function RoutedErrorBoundary({ children }: { children: ReactNode }) { const [location] = useLocation(); return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>; }
 
 function Router() {
-  return <RoutedErrorBoundary><Switch><Route path="/" component={Home} /><Route path="/auth" component={Auth} /><Route path="/onboarding" component={Onboarding} /><Route path="/dashboard"><Shell><Dashboard /></Shell></Route><Route path="/cycle"><Shell><Cycle /></Shell></Route><Route path="/nutrition"><Shell><Nutrition /></Shell></Route><Route path="/pcos"><Shell><CarePage type="pcos" /></Shell></Route><Route path="/menopause"><Shell><CarePage type="menopause" /></Shell></Route><Route path="/hygiene"><Shell><CarePage type="hygiene" /></Shell></Route><Route path="/fitness"><Shell><CarePage type="fitness" /></Shell></Route><Route path="/progress"><Shell><Progress /></Shell></Route><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
+  return <RoutedErrorBoundary><Switch><Route path="/" component={Home} /><Route path="/auth" component={Auth} /><Route path="/onboarding" component={Onboarding} /><Route path="/dashboard"><Shell><Dashboard /></Shell></Route><Route path="/cycle"><Shell><Cycle /></Shell></Route><Route path="/nutrition"><Shell><Nutrition /></Shell></Route><Route path="/pcos"><Shell><PcosSupport /></Shell></Route><Route path="/menopause"><Shell><CarePage type="menopause" /></Shell></Route><Route path="/hygiene"><Shell><CarePage type="hygiene" /></Shell></Route><Route path="/fitness"><Shell><CarePage type="fitness" /></Shell></Route><Route path="/progress"><Shell><Progress /></Shell></Route><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
 }
 
 function App() {
