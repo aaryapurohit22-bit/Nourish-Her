@@ -160,7 +160,7 @@ function Home() {
         <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#cfe0d5] bg-[#edf5ee] px-3 py-1.5 text-xs font-semibold text-[#38706a]"><span className="h-1.5 w-1.5 rounded-full bg-[#6da98e]" /> A better relationship with your health</div>
         <h1 className="font-display text-[54px] leading-[.98] tracking-[-.055em] text-[#173b3d] md:text-[78px]">Care that makes <em className="text-[#b86f4e]">room</em> for you.</h1>
         <p className="mt-7 max-w-md text-[17px] leading-8 text-[#66807c]">Nourish Her brings your cycle, nutrition, movement and wellbeing into one thoughtful space — with guidance that respects your whole life.</p>
-        <div className="mt-9 flex flex-wrap items-center gap-3"><Link href="/onboarding" data-testid="link-hero-create" className="inline-flex items-center gap-2 rounded-lg bg-[#1e6364] px-5 py-3.5 text-sm font-semibold text-[#fbf8f0] shadow-soft hover:-translate-y-0.5 hover:bg-[#174e50]">Create your health space <ArrowRight size={16} /></Link><Link href="/dashboard" data-testid="link-hero-preview" className="inline-flex items-center gap-2 rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-5 py-3.5 text-sm font-semibold text-[#356562] hover:border-[#9fbdb0]">See a preview <MoveRight size={16} /></Link></div>
+          <div className="mt-9 flex flex-wrap items-center gap-3"><Link href="/onboarding" data-testid="link-hero-create" className="inline-flex items-center gap-2 rounded-lg bg-[#1e6364] px-5 py-3.5 text-sm font-semibold text-[#fbf8f0] shadow-soft hover:-translate-y-0.5 hover:bg-[#174e50]">Create your health space <ArrowRight size={16} /></Link><Link href="/dashboard" data-testid="link-hero-preview" className="inline-flex items-center gap-2 rounded-lg border border-[#d7dfd7] bg-[#fbf8f0] px-5 py-3.5 text-sm font-semibold text-[#173b3d] hover:border-[#9fbdb0]">See a preview <MoveRight size={16} /></Link></div>
         <div className="mt-12 flex items-center gap-4 border-t border-[#dfe3d9] pt-5 text-xs text-[#71908b]"><ShieldCheck size={17} className="text-[#4b8c7c]" /><span>Thoughtful by design. Private by default.</span></div>
       </div>
       <div className="relative min-h-[460px] overflow-hidden rounded-[28px] bg-[#dceae1] p-5 shadow-soft md:min-h-[555px] md:p-7">
@@ -174,7 +174,23 @@ function Home() {
     </section>
     <section id="approach" className="border-y border-[#e1e3d9] bg-[#fbf8f0] px-5 py-16 md:px-10 md:py-24"><div className="mx-auto max-w-7xl"><div className="grid gap-10 md:grid-cols-[.75fr_1.25fr]"><div><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#71908b]">A calmer way in</p><h2 className="mt-3 max-w-sm font-display text-4xl leading-tight tracking-[-.04em]">Health is not a checklist.</h2></div><div className="grid gap-8 sm:grid-cols-3"><Feature icon={Target} number="01" title="Notice patterns" text="Simple check-ins help you see what your body has been saying." /><Feature icon={BookOpen} number="02" title="Understand more" text="Clear, considered guidance without the noise or alarm." /><Feature icon={Leaf} number="03" title="Choose gently" text="Small next steps that fit the person you are today." /></div></div></div></section>
     <section id="care" className="mx-auto max-w-7xl px-5 py-16 md:px-10 md:py-24"><div className="max-w-xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#71908b]">One space, many seasons</p><h2 className="mt-3 font-display text-4xl leading-tight tracking-[-.04em] md:text-5xl">Support for the parts of you that connect.</h2></div><div className="mt-10 grid gap-3 md:grid-cols-12"><CareTile href="/cycle" title="Cycle" kicker="Track with context" span="md:col-span-7" color="bg-[#dceae1]" icon={CalendarDays} /><CareTile href="/nutrition" title="Nutrition" kicker="Eat for your energy" span="md:col-span-5" color="bg-[#f1e5d2]" icon={Utensils} /><CareTile href="/fitness" title="Movement" kicker="Feel good in your body" span="md:col-span-5" color="bg-[#e4e1eb]" icon={Dumbbell} /><CareTile href="/progress" title="Your progress" kicker="See the bigger picture" span="md:col-span-7" color="bg-[#d5e7e5]" icon={LineChart} /></div></section>
-    <section id="privacy" className="bg-[#173b3d] px-5 py-16 text-[#f7f2e8] md:px-10 md:py-24"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-end"><div><p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9bd6c2]">Begin where you are</p><h2 className="mt-3 max-w-lg font-display text-4xl leading-tight tracking-[-.04em] md:text-5xl">A little more clarity can change a lot.</h2></div><Link href="/onboarding" data-testid="link-footer-start" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#9bd6c2] px-5 py-3.5 text-sm font-bold text-[#173b3d] hover:bg-[#b5e2d0]">Make space for your health <ArrowRight size={16} /></Link></div><div className="mt-14 flex flex-wrap gap-x-10 gap-y-3 border-t border-[#315858] pt-5 text-xs text-[#a8c0b7]"><span>Educational, not diagnostic</span><span>Built for real life</span><span>Private by default</span></div></section>
+    <section id="privacy" className="bg-[#173b3d] px-5 py-16 text-[#f7f2e8] md:px-10 md:py-24">
+  <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-end">
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#9bd6c2]">
+        Begin where you are
+      </p>
+      <h2 className="mt-3 max-w-lg font-footer text-[#b5e2d0]">
+        Make space for your health <ArrowRight size={16} />
+      </h2>
+    </div>
+    <div className="mt-14 flex flex-wrap gap-x-10 gap-y-3 border-t border-[#315858] pt-5 text-xs text-[#a8c0b7]">
+      <span>Educational, not diagnostic</span>
+      <span>Built for real life</span>
+      <span>Private by default</span>
+    </div>
+  </div>
+</section>
   </div>;
 }
 
